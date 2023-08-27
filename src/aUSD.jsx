@@ -1,0 +1,1 @@
+// main aUSD BOS app component
