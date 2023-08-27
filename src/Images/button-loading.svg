@@ -1,0 +1,33 @@
+<svg viewBox="0 0 24 8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none">
+  <!-- 
+    Author: Maximilian Duartes
+    Web: topan.com.ar
+  -->
+  <style>
+    @keyframes loader-18 {
+
+      0% {
+        transform: scale(1) rotateZ(0)
+      }
+
+      50% {
+        transform: scale(1.5) rotateZ(180deg)
+      }
+
+      100% {
+        transform: scale(1) rotateZ(360deg)
+      }
+
+    }
+  </style>
+  <g style="animation:loader-18 1s ease-out infinite both;transform-origin:4px;animation-delay: 0s;">
+    <circle cx="4" cy="4" r="1.5" fill="#fff" />
+  </g>
+  <g style="animation:loader-18 1s ease-out infinite both; transform-origin:11px;animation-delay: .3s;">
+    <circle cx="11" cy="4" r="1.5" fill="#fff" />
+  </g>
+  <g style="animation:loader-18 1s ease-out infinite both;transform-origin:18px;animation-delay: .6s;">
+    <circle cx="18" cy="4" r="1.5" fill="#fff" />
+  </g>
+
+</svg>
