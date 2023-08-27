@@ -26,18 +26,24 @@ const Header = styled.div`
       background: #262626 !important;
     }
   }
+  .logo{
+    color: white;
+    scale :7;
+    margin-left : 42px
+  }
 `;
 
-const aUSDLogo = () => (
+const AUSDLogo = () => (
   <img
     height={25}
-    src={`https://avatars.githubusercontent.com/u/77984392?v=4`}
+    className="logo"
+    src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/1657682b919b92878e17f35a62a787590da08258/src/Images/aUSD-LOGO.svg`}
   />
 );
 
 return (
   <Header>
-    <aUSDLogo />
+    <AUSDLogo />
     <Web3Connect className="web3-connect" connectLabel="Connect Wallet" />
   </Header>
 );
