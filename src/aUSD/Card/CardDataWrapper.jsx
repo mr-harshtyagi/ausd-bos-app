@@ -23,7 +23,6 @@ const DataWrapper = styled.div`
 
 return <DataWrapper>{props.children}</DataWrapper>;
 
-// src={`${config.ownerId}/widget/AAVE.Card.CardDataWrapper`}
 // props={{
 //   children: [
 //     <div className="card-data-row">
