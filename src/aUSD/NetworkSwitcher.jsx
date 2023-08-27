@@ -132,21 +132,7 @@ const DropdownImage = () => (
   />
 );
 
-const PolygonImage = () => (
-  <img
-    className="network-img"
-    src={`${config.ipfsPrefix}/bafkreieaobutw4ibjbh7cyom4wjzjc3rx2fxs2gpfhzasgsoj5f4hjxo2m`}
-  />
-);
-
-const ArbImage = () => (
-  <img
-    className="network-img"
-    src={`${config.ipfsPrefix}/bafkreibjsp3la57lxpt2zr3eo4bz4n6hrgr6iordyopkbd4yjy2hgxdrsy`}
-  />
-);
-
-const EthImage = () => (
+const SepoliEthImage = () => (
   <img
     className="network-img"
     src={`${config.ipfsPrefix}/bafkreih7c6cip4ckunan7c3n5ckyf56mfnqmu7u5zgvxvhqvjsyf76kwxy`}
@@ -160,12 +146,7 @@ const toggleDropdown = disabled
 const getChainImage = (chainId) => {
   switch (chainId) {
     case 11155111:
-      return EthImage;
-    case 42161:
-      return ArbImage;
-    case 137:
-    case 1442:
-      return PolygonImage;
+      return SepoliEthImage;
     default:
       throw new Error("unknown chain id");
   }
@@ -181,46 +162,16 @@ return (
   <SwitchContainer>
     {state.showDropdown && (
       <DropdownMobile>
-        <div>Select Aave Market</div>
+        <div>Select aUSD Market</div>
         <div
           className="dropdown-mobile-item"
           onClick={() => {
             State.update({ showDropdown: false });
-            switchNetwork(1);
+            switchNetwork(11155111);
           }}
         >
-          <EthImage />
-          <div>Ethereum</div>
-        </div>
-        <div
-          className="dropdown-mobile-item"
-          onClick={() => {
-            State.update({ showDropdown: false });
-            switchNetwork(42161);
-          }}
-        >
-          <ArbImage />
-          <div>Arbitrum</div>
-        </div>
-        <div
-          className="dropdown-mobile-item"
-          onClick={() => {
-            State.update({ showDropdown: false });
-            switchNetwork(137);
-          }}
-        >
-          <PolygonImage />
-          <div>Polygon</div>
-        </div>
-        <div
-          className="dropdown-mobile-item"
-          onClick={() => {
-            State.update({ showDropdown: false });
-            switchNetwork(1442);
-          }}
-        >
-          <PolygonImage />
-          <div>Polygon zkEVM Testnet</div>
+          <SepoliEthImage />
+          <div>Sepolia Testnet</div>
         </div>
       </DropdownMobile>
     )}
@@ -231,37 +182,19 @@ return (
     </DropdownContainer>
     {state.showDropdown && (
       <div className="dropdown-pc">
-        <div>Select Aave Market</div>
+        <div>Select aUSD Market</div>
         <div
           className="dropdown-pc-item"
           onClick={() => {
             State.update({ showDropdown: false });
-            switchNetwork(1);
+            switchNetwork(11155111);
           }}
         >
-          <EthImage />
-          <div>Ethereum</div>
+          <SepoliEthImage />
+          <div>Sepolia Testnet</div>
         </div>
-        <div
-          className="dropdown-pc-item"
-          onClick={() => {
-            State.update({ showDropdown: false });
-            switchNetwork(137);
-          }}
-        >
-          <PolygonImage />
-          <div>Polygon</div>
-        </div>
-        <div
-          className="dropdown-pc-item"
-          onClick={() => {
-            State.update({ showDropdown: false });
-            switchNetwork(1442);
-          }}
-        >
-          <PolygonImage />
-          <div>Polygon zkEVM Testnet</div>
-        </div>
+        
+       
       </div>
     )}
   </SwitchContainer>
