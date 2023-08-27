@@ -207,5 +207,6 @@ return (
 //   "config": {
 //     "ipfsPrefix": "https://ipfs.near.social/ipfs",
 //     "chainName": "Sepolia Testnet"
-//   }
+//   },
+//  "switchNetwork": () => {}
 // }
