@@ -23,11 +23,11 @@ return (
   </CardsContainer>
 );
 
-props = {
-  title: "Assets to supply",
-  config: {
-    style: {
-      marginTop: "16px",
-    },
-  },
-};
+// props = {
+//   title: "Assets to supply",
+//   config: {
+//     style: {
+//       marginTop: "16px",
+//     },
+//   },
+// };
