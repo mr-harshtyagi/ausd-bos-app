@@ -56,7 +56,10 @@ return (
       Deposit
     </TabItem>
     <TabItem selected={select === "mint"} onClick={() => setSelect("mint")}>
-      Mint
+      Mint aUSD
+    </TabItem>
+    <TabItem selected={select === "repay"} onClick={() => setSelect("repay")}>
+      Repay
     </TabItem>
   </TabContainer>
 );
@@ -68,4 +71,4 @@ return (
 // },
 // "select": "deposit",
 // "setSelect": () => {},
-// //  
+// }
