@@ -41,5 +41,3 @@ src={`https://app.aave.com/icons/tokens/${"BAL".toLowerCase()}.svg`}
 <div className="token-chain">{"Balancer"}</div>
 </div> */
 }
-
-//children is rendering an array.
