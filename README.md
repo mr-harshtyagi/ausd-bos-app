@@ -1,4 +1,4 @@
-# decentralized-stablecoin-bos-app
+# ausd-bos-app (Decentralized Stablecoin Platform)
 
 This is a LSD backed interest bearing stablecoin protocol. Contracts are deployed on sepolia testnet.
 
