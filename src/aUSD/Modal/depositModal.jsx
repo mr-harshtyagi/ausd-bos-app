@@ -1,4 +1,12 @@
-const { config, data, onActionSuccess, onRequestClose, chainId } = props;
+const {
+  config,
+  data,
+  onActionSuccess,
+  onRequestClose,
+  chainId,
+  title,
+  loading,
+} = props;
 
 if (!data) {
   return <div />;
@@ -181,6 +189,34 @@ const changeValue = (value) => {
   State.update({ amount: value });
 };
 
+const PrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${loading || disabled ? "#36295C" : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+const Loading = () => (
+  <img
+    width={40}
+    height={20}
+    src={`${config.ipfsPrefix}/bafkreib3s7t6npgjqrplyduxbcrnpx7rnncxzgmsgp5smo3byms272jkgm`}
+  />
+);
+
 return (
   <>
     <Widget
@@ -243,22 +279,9 @@ return (
       }}
     />
     <br />
-    <Widget
-      src={`${config.ownerId}/widget/AAVE.PrimaryButton`}
-      props={{
-        config,
-        children: `Supply ${"BAL"}`,
-        loading: state.loading,
-        disabled,
-        onClick: () => {
-          const amount = Big(state.amount)
-            .mul(Big(10).pow(decimals))
-            .toFixed(0);
-          // supply common erc20
-          depositStETH(amount);
-        },
-      }}
-    />
+    <PrimaryButton disabled={loading || disabled}>
+      {loading ? <Loading /> : title}
+    </PrimaryButton>
   </>
 );
 
