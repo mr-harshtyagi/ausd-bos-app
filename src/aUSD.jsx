@@ -516,7 +516,7 @@ const KVData = styled.div`
 const heroData = [
   {
     name: "Total Deposit",
-    value: `${state.totalDeposits} $`,
+    value: `$ ${state.totalDeposits} `,
   },
   {
     name: "Stablecoin APY",
