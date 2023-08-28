@@ -692,166 +692,26 @@ const body = loading ? (
 
       {state.selectTab === "deposit" && (
         <>
+          <div> Deposit stETH</div>
           {/* Add prebuilt component to replace 🟡 */}
-          {/* <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
-            props={{
-              config,
-              chainId: state.chainId,
-              yourSupplies: state.yourSupplies,
-              showWithdrawModal: state.showWithdrawModal,
-              setShowWithdrawModal: (isShow) =>
-                State.update({ showWithdrawModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              withdrawETHGas,
-              withdrawERC20Gas,
-            }}
-          />
-          <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
-            props={{
-              config,
-              chainId: state.chainId,
-              assetsToSupply: state.assetsToSupply,
-              showSupplyModal: state.showSupplyModal,
-              setShowSupplyModal: (isShow) =>
-                State.update({ showSupplyModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              depositETHGas,
-              depositERC20Gas,
-            }}
-          /> */}
         </>
       )}
       {state.selectTab === "withdraw" && (
         <>
+          <div> Withdraw stETH</div>
           {/* Add prebuilt component to replace 🟡 */}
-          {/* <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
-            props={{
-              config,
-              chainId: state.chainId,
-              yourSupplies: state.yourSupplies,
-              showWithdrawModal: state.showWithdrawModal,
-              setShowWithdrawModal: (isShow) =>
-                State.update({ showWithdrawModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              withdrawETHGas,
-              withdrawERC20Gas,
-            }}
-          />
-          <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
-            props={{
-              config,
-              chainId: state.chainId,
-              assetsToSupply: state.assetsToSupply,
-              showSupplyModal: state.showSupplyModal,
-              setShowSupplyModal: (isShow) =>
-                State.update({ showSupplyModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              depositETHGas,
-              depositERC20Gas,
-            }}
-          /> */}
         </>
       )}
       {state.selectTab === "mint" && (
         <>
+          <div> Mint aUSD</div>
           {/* Add prebuilt component to replace 🟡 */}
-          {/* <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
-            props={{
-              config,
-              chainId: state.chainId,
-              yourSupplies: state.yourSupplies,
-              showWithdrawModal: state.showWithdrawModal,
-              setShowWithdrawModal: (isShow) =>
-                State.update({ showWithdrawModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              withdrawETHGas,
-              withdrawERC20Gas,
-            }}
-          />
-          <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
-            props={{
-              config,
-              chainId: state.chainId,
-              assetsToSupply: state.assetsToSupply,
-              showSupplyModal: state.showSupplyModal,
-              setShowSupplyModal: (isShow) =>
-                State.update({ showSupplyModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              depositETHGas,
-              depositERC20Gas,
-            }}
-          /> */}
         </>
       )}
       {state.selectTab === "repay" && (
         <>
+          <div>Repay aUSD</div>
           {/* Add prebuilt component to replace 🟡 */}
-          {/* <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
-            props={{
-              config,
-              chainId: state.chainId,
-              yourSupplies: state.yourSupplies,
-              showWithdrawModal: state.showWithdrawModal,
-              setShowWithdrawModal: (isShow) =>
-                State.update({ showWithdrawModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              withdrawETHGas,
-              withdrawERC20Gas,
-            }}
-          />
-          <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
-            props={{
-              config,
-              chainId: state.chainId,
-              assetsToSupply: state.assetsToSupply,
-              showSupplyModal: state.showSupplyModal,
-              setShowSupplyModal: (isShow) =>
-                State.update({ showSupplyModal: isShow }),
-              onActionSuccess,
-              healthFactor: formatHealthFactor(
-                state.assetsToBorrow.healthFactor
-              ),
-              formatHealthFactor,
-              depositETHGas,
-              depositERC20Gas,
-            }}
-          /> */}
         </>
       )}
       {/* Widget to replace 🟡 */}
