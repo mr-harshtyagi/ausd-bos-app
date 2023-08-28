@@ -56,20 +56,20 @@ function switchEthereumChain(chainId) {
   ]);
   // If `res` === `undefined`, it means switch chain failed, which is very weird but it works.
   // If `res` is `null` the function is either not called or executed successfully.
-  if (res === undefined) {
-    console.log(
-      `Failed to switch chain to ${chainId}. Add the chain to wallet`
-    );
-    const config = getNetworkConfig(chainId);
-    Ethers.send("wallet_addEthereumChain", [
-      {
-        chainId: chainIdHex,
-        chainName: config.chainName,
-        nativeCurrency: config.nativeCurrency,
-        rpcUrls: [config.rpcUrl],
-      },
-    ]);
-  }
+  // if (res === undefined) {
+  //   console.log(
+  //     `Failed to switch chain to ${chainId}. Add the chain to wallet`
+  //   );
+  //   const config = getNetworkConfig(chainId);
+  //   Ethers.send("wallet_addEthereumChain", [
+  //     {
+  //       chainId: chainIdHex,
+  //       chainName: config.chainName,
+  //       nativeCurrency: config.nativeCurrency,
+  //       rpcUrls: [config.rpcUrl],
+  //     },
+  //   ]);
+  // }
 }
 
 // 🟢
@@ -120,21 +120,16 @@ const config = getConfig(context.networkId);
 
 // App states
 State.init({
-  imports: {},
+  imports: {}, // 🔴
   chainId: undefined, // chainId is undefined in the case of unsupported chains
   isChainSupported: true,
   showDropdown: false,
-  showWithdrawModal: false,
-  showSupplyModal: false,
-  showRepayModal: false,
-  showBorrowModal: false,
   walletConnected: false,
-  assetsToSupply: undefined,
-  yourSupplies: undefined,
-  assetsToBorrow: undefined,
-  yourBorrows: undefined,
+  stEthBalance: undefined,
+  depositedStEth: undefined,
+  mintableaUSD: undefined,
+  mintedaUSD: undefined,
   address: undefined,
-  baseAssetBalance: undefined,
   selectTab: "deposit", // deposit | withdraw | mint | repay
   totalDeposits: "1700",
   stablecoinApy: "8.33",
@@ -142,7 +137,7 @@ State.init({
 });
 
 // 🟡
-const loading = !state.walletBalance;
+const loading = !state.address;
 
 // Import functions to state.imports
 function importFunctions(imports) {
@@ -160,12 +155,16 @@ const modules = {
   data: `${config.ownerId}/widget/AAVE.Data`,
 };
 
-function checkProvider() {
+function checkProviderAndUpdateStates() {
   const provider = Ethers.provider();
   if (provider) {
     State.update({ walletConnected: true });
+    console.log("wallet connected", state.walletConnected);
+    updateDataAndAddress();
+    console.log("wallet connected", state.address);
   } else {
     State.update({ walletConnected: false });
+    console.log("wallet connected", state.walletConnected);
   }
 }
 
@@ -182,18 +181,18 @@ function formatHealthFactor(healthFactor) {
   return Big(healthFactor).toFixed(2, ROUND_DOWN);
 }
 
-function batchBalanceOf(chainId, userAddress, tokenAddresses, abi) {
-  const balanceProvider = new ethers.Contract(
-    config.balanceProviderAddress,
-    abi.body,
-    Ethers.provider().getSigner()
-  );
+// function batchBalanceOf(chainId, userAddress, tokenAddresses, abi) {
+//   const balanceProvider = new ethers.Contract(
+//     config.balanceProviderAddress,
+//     abi.body,
+//     Ethers.provider().getSigner()
+//   );
 
-  return balanceProvider.batchBalanceOf([userAddress], tokenAddresses);
-}
+//   return balanceProvider.batchBalanceOf([userAddress], tokenAddresses);
+// }
 
 // update data in async manner
-function updateData(refresh) {
+function updateDataAndAddress() {
   // check abi loaded
   if (
     Object.keys(CONTRACT_ABI)
@@ -202,22 +201,20 @@ function updateData(refresh) {
   ) {
     return;
   }
+
   const provider = Ethers.provider();
   if (!provider) {
     return;
   }
-  provider
-    .getSigner()
-    ?.getAddress()
-    ?.then((address) => {
-      State.update({ address });
-    });
-  provider
-    .getSigner()
-    ?.getBalance()
-    .then((balance) => State.update({ baseAssetBalance: balance }));
-  if (!state.address || !state.baseAssetBalance) {
-    return;
+
+  if (!state.address) {
+    console.log("Wallet address not found");
+    provider
+      .getSigner()
+      ?.getAddress()
+      ?.then((address) => {
+        State.update({ address: address });
+      });
   }
 }
 
@@ -250,10 +247,10 @@ const ChainImage = () => {
   }
 };
 
-checkProvider();
-if (state.walletConnected && state.chainId) {
-  updateData();
-}
+checkProviderAndUpdateStates();
+// if (state.walletConnected && state.chainId) {
+//   updateData();
+// }
 
 const AUSDLogo = () => (
   <img
@@ -706,10 +703,10 @@ const body = loading ? (
       {state.selectTab === "deposit" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
+          {state.address ? (
             <div> Deposit stETH</div>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
