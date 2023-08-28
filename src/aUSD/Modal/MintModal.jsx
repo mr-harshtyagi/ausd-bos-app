@@ -1,33 +1,9 @@
-const {
-  config,
-  data,
-  onActionSuccess,
-  onRequestClose,
-  chainId,
-  title,
-  loading,
-} = props;
-
-if (!data) {
-  return <div />;
-}
-
 function isValid(a) {
   if (!a) return false;
   if (isNaN(Number(a))) return false;
   if (a === "") return false;
   return true;
 }
-
-const {
-  symbol,
-  balance,
-  priceInUsd,
-  decimals,
-  name: tokenName,
-  healthFactor,
-  supportPermit,
-} = data;
 
 const WithdrawContainer = styled.div`
   display: flex;
@@ -110,15 +86,17 @@ const Max = styled.span`
 `;
 
 State.init({
-  amount: "",
-  amountInUSD: "0.00",
-  loading: false,
+  stEthBalance: "2",
+  stEthPriceInUsd: "1700",
+  depositAmount: "",
+  depositAmountInUSD: "0.00",
+  depositButtonLoading: false,
 });
 
 // 🟢
 function depositStETH(amount) {
   State.update({
-    loading: true,
+    depositButtonLoading: true,
   });
   return Ethers.provider()
     .getSigner()
@@ -141,11 +119,11 @@ function depositStETH(amount) {
             onActionSuccess({
               msg: `You supplied ${Big(amount)
                 .div(Big(10).pow(decimals))
-                .toFixed(8)} ${symbol}`,
+                .toFixed(8)} ${"stETH"}`,
               callback: () => {
                 onRequestClose();
                 State.update({
-                  loading: false,
+                  depositButtonLoading: false,
                 });
               },
             });
@@ -153,47 +131,50 @@ function depositStETH(amount) {
           } else {
             console.log("tx failed", res);
             State.update({
-              loading: false,
+              depositButtonLoading: false,
             });
           }
         })
-        .catch(() => State.update({ loading: false }));
+        .catch(() => State.update({ depositButtonLoading: false }));
     })
-    .catch(() => State.update({ loading: false }));
+    .catch(() => State.update({ depositButtonLoading: false }));
 }
 
-const maxValue = Big(balance).toFixed(3);
+const deposiMaxValue = Big(state.stEthBalance).toFixed(3);
 
-const disabled =
-  !state.amount || !isValid(state.amount) || Number(state.amount) === 0;
+const depositButtonDisabled =
+  !state.depositAmount ||
+  !isValid(state.depositAmount) ||
+  Number(state.depositAmount) === 0;
 
-const changeValue = (value) => {
-  if (Number(value) > Number(maxValue)) {
-    value = maxValue;
+const changeDepositValue = (value) => {
+  if (Number(value) > Number(deposiMaxValue)) {
+    value = deposiMaxValue;
   }
   if (Number(value) < 0) {
     value = "0";
   }
   if (isValid(value)) {
-    const amountInUSD = Big(value).mul(priceInUsd).toFixed(2, ROUND_DOWN);
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
     State.update({
-      amountInUSD,
-      amount: value,
+      depositAmountInUSD: amountInUSD,
+      depositAmount: value,
     });
-    updateNewHealthFactor();
   } else {
     State.update({
-      amountInUSD: "0.00",
+      depositAmountInUSD: "0.00",
     });
   }
-  State.update({ amount: value });
+  State.update({ depositAmount: value });
 };
 
 const PrimaryButton = styled.button`
   border: 0;
 
   color: white;
-  background: ${loading || disabled ? "#36295C" : "#8247e5"};
+  background: ${state.depositButtonLoading || depositButtonDisabled
+    ? "#36295C"
+    : "#8247e5"};
   border-radius: 5px;
 
   height: 48px;
@@ -222,7 +203,7 @@ const FlexBetweenContainer = styled.div`
   justify-content: space-between;
 `;
 
-const Title = styled.div`
+const DepositTitle = styled.div`
   font-size: 14px;
   font-weight: 500;
 
@@ -238,7 +219,7 @@ const Content = styled.div`
 
 return (
   <>
-    <Title>"Amount"</Title>
+    <DepositTitle>Amount to Deposit</DepositTitle>
     <Content>
       {" "}
       <>
@@ -246,7 +227,7 @@ return (
           <TokenTexture>
             <Input
               type="number"
-              value={state.amount}
+              value={state.depositAmount}
               onChange={(e) => {
                 changeValue(e.target.value);
               }}
@@ -258,21 +239,21 @@ return (
             <img
               width={26}
               height={26}
-              src={`https://app.aave.com/icons/tokens/${"BAL".toLowerCase()}.svg`}
+              src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
             />
-            <TokenTexture>{"BAL"}</TokenTexture>
+            <TokenTexture>{"stETH"}</TokenTexture>
           </TokenWrapper>
         </FlexBetweenContainer>
         <FlexBetweenContainer>
-          <GrayTexture>${state.amountInUSD}</GrayTexture>
+          <GrayTexture>${state.depositAmountInUSD}</GrayTexture>
           <GrayTexture>
             Wallet Balance:{" "}
-            {isValid(balance) && balance !== "-"
-              ? Big(balance).toFixed(7)
-              : balance}
+            {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+              ? Big(state.stEthBalance).toFixed(7)
+              : state.stEthBalance}
             <Max
               onClick={() => {
-                changeValue(maxValue);
+                changeDepositValue(maxValue);
               }}
             >
               MAX
@@ -282,8 +263,11 @@ return (
       </>
     </Content>
     <br />
-    <PrimaryButton disabled={loading || disabled}>
-      {loading ? <Loading /> : title}
+    <PrimaryButton
+      onClick={depositStETH}
+      disabled={depositButtonLoading || depositButtonDisabled}
+    >
+      {depositButtonLoading ? <Loading /> : "Deposit"}
     </PrimaryButton>
   </>
 );

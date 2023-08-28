@@ -178,7 +178,7 @@ const changeValue = (value) => {
     const amountInUSD = Big(value).mul(priceInUsd).toFixed(2, ROUND_DOWN);
     State.update({
       amountInUSD,
-      amount: value,
+      depositAmount: value,
     });
     updateNewHealthFactor();
   } else {
