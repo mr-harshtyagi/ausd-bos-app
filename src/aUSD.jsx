@@ -10,6 +10,9 @@ const CONTRACT_ABI = {
   aUSD_Oracle_ABI:
     "https://raw.githubusercontent.com/corndao/aave-v3-bos-app/main/abi/AAVEPoolV3.json",
 };
+const CONTRACT_ADDRESS = fetch(
+  "https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/contract_addresses.json"
+);
 const DEFAULT_CHAIN_ID = 11155111;
 const NATIVE_SYMBOL_ADDRESS_MAP_KEY = "0x0";
 const ETH_TOKEN = { name: "Ethereum", symbol: "ETH", decimals: 18 };
@@ -50,6 +53,22 @@ State.init({
   alertModalText: false,
 });
 
+// App config 🟢
+function getConfig(network) {
+  const chainId = state.chainId;
+  switch (network) {
+    case "testnet":
+      return {
+        ownerId: "aave-v3.near",
+        nodeUrl: "https://rpc.mainnet.near.org",
+        ipfsPrefix: "https://ipfs.near.social/ipfs",
+        ...(chainId ? getNetworkConfig(chainId) : {}),
+      };
+    default:
+      throw Error(`Unconfigured environment '${network}'.`);
+  }
+}
+
 // Get aUSD network config by chain id 🟢
 function getNetworkConfig(chainId) {
   const abis = {
@@ -58,25 +77,17 @@ function getNetworkConfig(chainId) {
     aUSD_Oracle_ABI: fetch(CONTRACT_ABI.aUSD_Oracle_ABI),
   };
 
-  const constants = {
-    FIXED_LIQUIDATION_VALUE: "1.0",
-    MAX_UINT_256:
-      "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    // AAVE_API_BASE_URL: "https://aave-data-service-7a85eea3aebe.herokuapp.com",
-  };
-
   switch (chainId) {
     case 11155111: // Sepolia testnet
       return {
         chainName: "Sepolia Testnet",
         nativeCurrency: ETH_TOKEN,
         nativeWrapCurrency: WETH_TOKEN,
-        rpcUrl: "https://eth-sepolia.g.alchemy.com/v2/demo",
-        aUSDAddress: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
-        erc20_stETHAddress: "0xD322A49006FC828F9B5B37Ab215F99B4E5caB19C",
-        aUSD_OracleAddress: "0xC7be5307ba715ce89b152f3Df0658295b3dbA8E2",
+        rpcUrl: "https://rpc2.sepolia.org",
+        aUSDAddress: CONTRACT_ADDRESS.aUSDAddress,
+        erc20_stETHAddress: CONTRACT_ADDRESS.erc20_stETHAddress,
+        aUSD_OracleAddress: CONTRACT_ADDRESS.aUSD_OracleAddress,
         ...abis,
-        ...constants,
       };
     default:
       throw new Error("unknown chain id");
@@ -91,20 +102,20 @@ function switchEthereumChain(chainId) {
   ]);
   // If `res` === `undefined`, it means switch chain failed, which is very weird but it works.
   // If `res` is `null` the function is either not called or executed successfully.
-  // if (res === undefined) {
-  //   console.log(
-  //     `Failed to switch chain to ${chainId}. Add the chain to wallet`
-  //   );
-  //   const config = getNetworkConfig(chainId);
-  //   Ethers.send("wallet_addEthereumChain", [
-  //     {
-  //       chainId: chainIdHex,
-  //       chainName: config.chainName,
-  //       nativeCurrency: config.nativeCurrency,
-  //       rpcUrls: [config.rpcUrl],
-  //     },
-  //   ]);
-  // }
+  if (res === undefined) {
+    console.log(
+      `Failed to switch chain to ${chainId}. Add the chain to wallet`
+    );
+    const config = getNetworkConfig(chainId);
+    Ethers.send("wallet_addEthereumChain", [
+      {
+        chainId: chainIdHex,
+        chainName: config.chainName,
+        nativeCurrency: config.nativeCurrency,
+        rpcUrls: [config.rpcUrl],
+      },
+    ]);
+  }
 }
 
 // Contract functions 🟢
@@ -112,61 +123,49 @@ function depositStETH(amount) {
   State.update({
     depositButtonLoading: true,
   });
-  // testing
-  onActionSuccess({
-    msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
-    // callback: () => {
-    //   onRequestClose();
-    //   State.update({
-    //     depositButtonLoading: false,
-    //   });
-    // },
-  });
-  ///
-  console.log("tx succeeded", res);
-  State.update({
-    depositButtonLoading: false,
-  });
-  // return Ethers.provider()
-  //   .getSigner()
-  //   .getAddress()
-  //   .then((address) => {
-  //     const aUSDContract = new ethers.Contract(
-  //       "contract_address",
-  //       "abi_contract",
-  //       Ethers.provider().getSigner()
-  //     );
-  //     return aUSDContract.depositStETH("param1", "param2", "param3", {
-  //       value: amount,
-  //     });
-  //   })
-  //   .then((tx) => {
-  //     tx.wait()
-  //       .then((res) => {
-  //         const { status } = res;
-  //         if (status === 1) {
-  //           onActionSuccess({
-  //             msg: `You supplied ${Big(amount)
-  //               .div(Big(10).pow(decimals))
-  //               .toFixed(8)} ${"stETH"}`,
-  //             callback: () => {
-  //               onRequestClose();
-  //               State.update({
-  //                 depositButtonLoading: false,
-  //               });
-  //             },
-  //           });
-  //           console.log("tx succeeded", res);
-  //         } else {
-  //           console.log("tx failed", res);
-  //           State.update({
-  //             depositButtonLoading: false,
-  //           });
-  //         }
-  //       })
-  //       .catch(() => State.update({ depositButtonLoading: false }));
-  //   })
-  //   .catch(() => State.update({ depositButtonLoading: false }));
+
+  return (
+    Ethers.provider()
+      .getSigner()
+      .getAddress()
+      .then((address) => {
+        // const aUSDContract = new ethers.Contract(
+        //   "contract_address",
+        //   "abi_contract",
+        //   Ethers.provider().getSigner()
+        // );
+        // return aUSDContract.depositStETH("param1", "param2", "param3", {
+        //   value: amount,
+        // });
+
+        // testing
+        setTimeout(() => {
+          onActionSuccess({
+            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+          });
+          State.update({ depositButtonLoading: false });
+        }, 2000);
+      })
+      // .then((tx) => {
+      //   tx.wait()
+      //     .then((res) => {
+      //       const { status } = res;
+      //       if (status === 1) {
+      //         onActionSuccess({
+      //           msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+      //         });
+      //         console.log("tx succeeded", res);
+      //       } else {
+      //         console.log("tx failed", res);
+      //         State.update({
+      //           depositButtonLoading: false,
+      //         });
+      //       }
+      //     })
+      //     .catch(() => State.update({ depositButtonLoading: false }));
+      // })
+      .catch(() => State.update({ depositButtonLoading: false }))
+  );
 }
 
 function withdrawStETH(amount) {
@@ -262,23 +261,7 @@ function isValid(a) {
   return true;
 }
 
-// App config 🟢
-function getConfig(network) {
-  const chainId = state.chainId;
-  switch (network) {
-    case "mainnet":
-      return {
-        ownerId: "aave-v3.near",
-        nodeUrl: "https://rpc.mainnet.near.org",
-        ipfsPrefix: "https://ipfs.near.social/ipfs",
-        ...(chainId ? getNetworkConfig(chainId) : {}),
-      };
-    default:
-      throw Error(`Unconfigured environment '${network}'.`);
-  }
-}
-
-const config = getConfig(context.networkId);
+const config = getConfig("testnet");
 
 // 🟡
 const loading = !state.address;
@@ -755,9 +738,7 @@ const PrimaryButton = styled.button`
   border: 0;
 
   color: white;
-  background: ${state.depositButtonLoading || depositButtonDisabled
-    ? "#36295C"
-    : "#8247e5"};
+  background: ${depositButtonDisabled ? "#36295C" : "#8247e5"};
   border-radius: 5px;
 
   height: 48px;
@@ -1051,9 +1032,9 @@ const body = loading ? (
               <br />
               <PrimaryButton
                 onClick={() => depositStETH(state.depositAmount)}
-                disabled={depositButtonLoading || depositButtonDisabled}
+                disabled={depositButtonDisabled}
               >
-                {depositButtonLoading ? <Loading /> : "Deposit"}
+                {state.depositButtonLoading ? <Loading /> : "Deposit"}
               </PrimaryButton>
             </>
           ) : (
