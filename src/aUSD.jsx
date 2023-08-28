@@ -28,8 +28,20 @@ State.init({
   depositAmountInUSD: "0.00",
   depositButtonLoading: false,
   depositedStEth: undefined, // withdraw
+  depositedStEthInUSD: undefined,
+  withdrawAmount: "",
+  withdrawAmountInUSD: "0.00",
+  withdrawButtonLoading: false,
   mintableaUSD: undefined, //mint
+  mintableaUSDInUSD: undefined,
+  mintAmount: "",
+  mintAmountInUSD: "0.00",
+  mintButtonLoading: false,
   mintedaUSD: undefined, // repay
+  mintedaUSDInUSD: undefined,
+  repayAmount: "",
+  repayAmountInUSD: "0.00",
+  repayButtonLoading: false,
   address: undefined,
   selectTab: "deposit", // deposit | withdraw | mint | repay
   totalDeposits: "1700",
@@ -95,7 +107,7 @@ function switchEthereumChain(chainId) {
   // }
 }
 
-// 🟢
+// Contract functions 🟢
 function depositStETH(amount) {
   State.update({
     depositButtonLoading: true,
@@ -157,7 +169,72 @@ function depositStETH(amount) {
   //   .catch(() => State.update({ depositButtonLoading: false }));
 }
 
-// 🟢
+function withdrawStETH(amount) {
+  State.update({
+    depositButtonLoading: true,
+  });
+  // testing
+  onActionSuccess({
+    msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+    // callback: () => {
+    //   onRequestClose();
+    //   State.update({
+    //     depositButtonLoading: false,
+    //   });
+    // },
+  });
+  ///
+  console.log("tx succeeded", res);
+  State.update({
+    depositButtonLoading: false,
+  });
+  // return Ethers.provider()
+  //   .getSigner()
+  //   .getAddress()
+  //   .then((address) => {
+  //     const aUSDContract = new ethers.Contract(
+  //       "contract_address",
+  //       "abi_contract",
+  //       Ethers.provider().getSigner()
+  //     );
+  //     return aUSDContract.depositStETH("param1", "param2", "param3", {
+  //       value: amount,
+  //     });
+  //   })
+  //   .then((tx) => {
+  //     tx.wait()
+  //       .then((res) => {
+  //         const { status } = res;
+  //         if (status === 1) {
+  //           onActionSuccess({
+  //             msg: `You supplied ${Big(amount)
+  //               .div(Big(10).pow(decimals))
+  //               .toFixed(8)} ${"stETH"}`,
+  //             callback: () => {
+  //               onRequestClose();
+  //               State.update({
+  //                 depositButtonLoading: false,
+  //               });
+  //             },
+  //           });
+  //           console.log("tx succeeded", res);
+  //         } else {
+  //           console.log("tx failed", res);
+  //           State.update({
+  //             depositButtonLoading: false,
+  //           });
+  //         }
+  //       })
+  //       .catch(() => State.update({ depositButtonLoading: false }));
+  //   })
+  //   .catch(() => State.update({ depositButtonLoading: false }));
+}
+
+function mint(anount) {}
+
+function repay(amount) {}
+
+// helpers
 if (
   state.chainId === undefined &&
   ethers !== undefined &&
