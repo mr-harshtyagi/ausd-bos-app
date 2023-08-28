@@ -268,7 +268,7 @@ function mint(amount) {
 
 function repay(amount) {
   State.update({
-    mintButtonLoading: true,
+    repayButtonLoading: true,
   });
 
   return (
@@ -290,7 +290,7 @@ function repay(amount) {
           onActionSuccess({
             msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
           });
-          State.update({ mintButtonLoading: false });
+          State.update({ repayButtonLoading: false });
         }, 2000);
       })
       // .then((tx) => {
@@ -1088,7 +1088,7 @@ const FlexBetweenContainer = styled.div`
   justify-content: space-between;
 `;
 
-const DepositTitle = styled.div`
+const GenericTitle = styled.div`
   font-size: 14px;
   font-weight: 500;
 
@@ -1221,7 +1221,7 @@ const body = loading ? (
           {/* Add prebuilt component to replace 🟡 */}
           {state.address ? (
             <>
-              <DepositTitle>Amount to Deposit</DepositTitle>
+              <GenericTitle>Amount to Deposit</GenericTitle>
               <Content>
                 {" "}
                 <>
@@ -1265,12 +1265,12 @@ const body = loading ? (
                 </>
               </Content>
               <br />
-              <PrimaryButton
+              <DepositPrimaryButton
                 onClick={() => depositStETH(state.depositAmount)}
                 disabled={depositButtonDisabled}
               >
                 {state.depositButtonLoading ? <Loading /> : "Deposit"}
-              </PrimaryButton>
+              </DepositPrimaryButton>
             </>
           ) : (
             <div>Need to connect wallet first.</div>
@@ -1282,7 +1282,7 @@ const body = loading ? (
           {/* Add prebuilt component to replace 🟡 */}
           {state.address ? (
             <>
-              <GenericTitleTitle>Amount to Withdraw</GenericTitleTitle>
+              <GenericTitle>Amount to Withdraw</GenericTitle>
               <Content>
                 {" "}
                 <>
@@ -1326,12 +1326,12 @@ const body = loading ? (
                 </>
               </Content>
               <br />
-              <WithdrawPrimaryButtonPrimaryButton
+              <WithdrawPrimaryButton
                 onClick={() => withdrawStETH(state.withdrawAmount)}
                 disabled={state.withdrawButtonLoading || withdrawButtonDisabled}
               >
                 {state.withdrawButtonLoading ? <Loading /> : "Withdraw"}
-              </WithdrawPrimaryButtonPrimaryButton>
+              </WithdrawPrimaryButton>
             </>
           ) : (
             <div>Need to connect wallet first.</div>
@@ -1343,7 +1343,7 @@ const body = loading ? (
           {/* Add prebuilt component to replace 🟡 */}
           {state.address ? (
             <>
-              <GenericTitleTitle>Amount to Mint</GenericTitleTitle>
+              <GenericTitle>Amount to Mint</GenericTitle>
               <Content>
                 {" "}
                 <>
@@ -1363,7 +1363,7 @@ const body = loading ? (
                       <img
                         width={26}
                         height={26}
-                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/aUSD.svg`}
                       />
                       <TokenTexture>{"stETH"}</TokenTexture>
                     </TokenWrapper>
@@ -1387,12 +1387,12 @@ const body = loading ? (
                 </>
               </Content>
               <br />
-              <MintPrimaryButtonPrimaryButton
-                onClick={() => mintStETH(state.mintAmount)}
+              <MintPrimaryButton
+                onClick={() => mint(state.mintAmount)}
                 disabled={state.mintButtonLoading || mintButtonDisabled}
               >
                 {state.mintButtonLoading ? <Loading /> : "Mint"}
-              </MintPrimaryButtonPrimaryButton>
+              </MintPrimaryButton>
             </>
           ) : (
             <div>Need to connect wallet first.</div>
@@ -1404,7 +1404,7 @@ const body = loading ? (
           {/* Add prebuilt component to replace 🟡 */}
           {state.address ? (
             <>
-              <GenericTitleTitle>Amount to Repay</GenericTitleTitle>
+              <GenericTitle>Amount to Repay</GenericTitle>
               <Content>
                 {" "}
                 <>
@@ -1424,7 +1424,7 @@ const body = loading ? (
                       <img
                         width={26}
                         height={26}
-                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/aUSD.svg`}
                       />
                       <TokenTexture>{"stETH"}</TokenTexture>
                     </TokenWrapper>
@@ -1448,12 +1448,12 @@ const body = loading ? (
                 </>
               </Content>
               <br />
-              <RepayPrimaryButtonPrimaryButton
-                onClick={() => repayStETH(state.repayAmount)}
+              <RepayPrimaryButton
+                onClick={() => repay(state.repayAmount)}
                 disabled={state.repayButtonLoading || repayButtonDisabled}
               >
-                {state.SrepayButtonLoading ? <Loading /> : "Repay"}
-              </RepayPrimaryButtonPrimaryButton>
+                {state.repayButtonLoading ? <Loading /> : "Repay"}
+              </RepayPrimaryButton>
             </>
           ) : (
             <div>Need to connect wallet first.</div>
