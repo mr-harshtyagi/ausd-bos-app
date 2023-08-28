@@ -141,7 +141,8 @@ State.init({
   healthFactor: "1.5",
 });
 
-const loading = !state.walletConnected;
+// 🟡
+const loading = !state.walletBalance;
 
 // Import functions to state.imports
 function importFunctions(imports) {
