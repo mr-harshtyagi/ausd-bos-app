@@ -170,68 +170,150 @@ function depositStETH(amount) {
 
 function withdrawStETH(amount) {
   State.update({
-    depositButtonLoading: true,
+    withdrawButtonLoading: true,
   });
-  // testing
-  onActionSuccess({
-    msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
-    // callback: () => {
-    //   onRequestClose();
-    //   State.update({
-    //     depositButtonLoading: false,
-    //   });
-    // },
-  });
-  ///
-  console.log("tx succeeded", res);
-  State.update({
-    depositButtonLoading: false,
-  });
-  // return Ethers.provider()
-  //   .getSigner()
-  //   .getAddress()
-  //   .then((address) => {
-  //     const aUSDContract = new ethers.Contract(
-  //       "contract_address",
-  //       "abi_contract",
-  //       Ethers.provider().getSigner()
-  //     );
-  //     return aUSDContract.depositStETH("param1", "param2", "param3", {
-  //       value: amount,
-  //     });
-  //   })
-  //   .then((tx) => {
-  //     tx.wait()
-  //       .then((res) => {
-  //         const { status } = res;
-  //         if (status === 1) {
-  //           onActionSuccess({
-  //             msg: `You supplied ${Big(amount)
-  //               .div(Big(10).pow(decimals))
-  //               .toFixed(8)} ${"stETH"}`,
-  //             callback: () => {
-  //               onRequestClose();
-  //               State.update({
-  //                 depositButtonLoading: false,
-  //               });
-  //             },
-  //           });
-  //           console.log("tx succeeded", res);
-  //         } else {
-  //           console.log("tx failed", res);
-  //           State.update({
-  //             depositButtonLoading: false,
-  //           });
-  //         }
-  //       })
-  //       .catch(() => State.update({ depositButtonLoading: false }));
-  //   })
-  //   .catch(() => State.update({ depositButtonLoading: false }));
+
+  return (
+    Ethers.provider()
+      .getSigner()
+      .getAddress()
+      .then((address) => {
+        // const aUSDContract = new ethers.Contract(
+        //   "contract_address",
+        //   "abi_contract",
+        //   Ethers.provider().getSigner()
+        // );
+        // return aUSDContract.depositStETH("param1", "param2", "param3", {
+        //   value: amount,
+        // });
+
+        // testing
+        setTimeout(() => {
+          onActionSuccess({
+            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+          });
+          State.update({ withdrawButtonLoading: false });
+        }, 2000);
+      })
+      // .then((tx) => {
+      //   tx.wait()
+      //     .then((res) => {
+      //       const { status } = res;
+      //       if (status === 1) {
+      //         onActionSuccess({
+      //           msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+      //         });
+      //         console.log("tx succeeded", res);
+      //       } else {
+      //         console.log("tx failed", res);
+      //         State.update({
+      //           depositButtonLoading: false,
+      //         });
+      //       }
+      //     })
+      //     .catch(() => State.update({ depositButtonLoading: false }));
+      // })
+      .catch(() => State.update({ withdrawButtonLoading: false }))
+  );
 }
 
-function mint(anount) {}
+function mint(amount) {
+  State.update({
+    mintButtonLoading: true,
+  });
 
-function repay(amount) {}
+  return (
+    Ethers.provider()
+      .getSigner()
+      .getAddress()
+      .then((address) => {
+        // const aUSDContract = new ethers.Contract(
+        //   "contract_address",
+        //   "abi_contract",
+        //   Ethers.provider().getSigner()
+        // );
+        // return aUSDContract.depositStETH("param1", "param2", "param3", {
+        //   value: amount,
+        // });
+
+        // testing
+        setTimeout(() => {
+          onActionSuccess({
+            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+          });
+          State.update({ mintButtonLoading: false });
+        }, 2000);
+      })
+      // .then((tx) => {
+      //   tx.wait()
+      //     .then((res) => {
+      //       const { status } = res;
+      //       if (status === 1) {
+      //         onActionSuccess({
+      //           msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+      //         });
+      //         console.log("tx succeeded", res);
+      //       } else {
+      //         console.log("tx failed", res);
+      //         State.update({
+      //           depositButtonLoading: false,
+      //         });
+      //       }
+      //     })
+      //     .catch(() => State.update({ depositButtonLoading: false }));
+      // })
+      .catch(() => State.update({ mintButtonLoading: false }))
+  );
+}
+
+function repay(amount) {
+  State.update({
+    mintButtonLoading: true,
+  });
+
+  return (
+    Ethers.provider()
+      .getSigner()
+      .getAddress()
+      .then((address) => {
+        // const aUSDContract = new ethers.Contract(
+        //   "contract_address",
+        //   "abi_contract",
+        //   Ethers.provider().getSigner()
+        // );
+        // return aUSDContract.depositStETH("param1", "param2", "param3", {
+        //   value: amount,
+        // });
+
+        // testing
+        setTimeout(() => {
+          onActionSuccess({
+            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+          });
+          State.update({ mintButtonLoading: false });
+        }, 2000);
+      })
+      // .then((tx) => {
+      //   tx.wait()
+      //     .then((res) => {
+      //       const { status } = res;
+      //       if (status === 1) {
+      //         onActionSuccess({
+      //           msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+      //         });
+      //         console.log("tx succeeded", res);
+      //       } else {
+      //         console.log("tx failed", res);
+      //         State.update({
+      //           depositButtonLoading: false,
+      //         });
+      //       }
+      //     })
+      //     .catch(() => State.update({ depositButtonLoading: false }));
+      // })
+      .catch(() => State.update({ mintButtonLoading: false }))
+  );
+}
 
 // helpers
 if (
