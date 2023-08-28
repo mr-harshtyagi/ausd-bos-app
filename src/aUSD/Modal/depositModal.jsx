@@ -1,19 +1,9 @@
-const {
-  config,
-  data,
-  onRequestClose,
-  onActionSuccess,
-  chainId,
-  depositERC20Gas,
-  formatHealthFactor,
-} = props;
+const { config, data, onActionSuccess, onRequestClose, chainId } = props;
 
 if (!data) {
   return <div />;
 }
 
-const MIN_ETH_GAS_FEE = 0.001;
-const ROUND_DOWN = 0;
 function isValid(a) {
   if (!a) return false;
   if (isNaN(Number(a))) return false;
@@ -24,11 +14,8 @@ function isValid(a) {
 const {
   symbol,
   balance,
-  marketReferencePriceInUsd,
-  supplyAPY,
-  usageAsCollateralEnabled,
+  priceInUsd,
   decimals,
-  underlyingAsset,
   name: tokenName,
   healthFactor,
   supportPermit,
@@ -118,136 +105,56 @@ State.init({
   amount: "",
   amountInUSD: "0.00",
   loading: false,
-  newHealthFactor: "-",
-  gas: "-",
-  allowanceAmount: "0",
-  needApprove: false,
 });
 
-/**
- *
- * @param {string} user user address
- * @param {string} reserve AAVE reserve address (token to supply)
- * @param {string} amount token amount in full decimals
- * @param {number} deadline unix timestamp in SECONDS
- * @param {string} rawSig signature from signERC20Approval
- * @returns txn object 🟢🟢
- */
-
-function update() {
-  if (
-    !isValid(state.amount) ||
-    !isValid(state.allowanceAmount) ||
-    Number(state.allowanceAmount) < Number(state.amount) ||
-    Number(state.amount) === 0
-  ) {
-    State.update({ needApprove: true });
-  } else {
-    State.update({ needApprove: false });
-  }
-}
-
-// update(); 🟢
-
 // 🟢
-function depositErc20(amount) {
+function depositStETH(amount) {
   State.update({
     loading: true,
   });
-  const deadline = Math.floor(Date.now() / 1000 + 3600); // after an hour
-
-  Ethers.provider()
+  return Ethers.provider()
     .getSigner()
     .getAddress()
-    .then((userAddress) => {
-      if (!supportPermit) {
-        depositFromApproval(amount)
-          .then((tx) => {
-            tx.wait()
-              .then((res) => {
-                const { status } = res;
-                if (status === 1) {
-                  onActionSuccess({
-                    msg: `You supplied ${Big(amount)
-                      .div(Big(10).pow(decimals))
-                      .toFixed(8)} ${symbol}`,
-                    callback: () => {
-                      onRequestClose();
-                      State.update({
-                        loading: false,
-                      });
-                    },
-                  });
-                  console.log("tx succeeded", res);
-                } else {
-                  State.update({
-                    loading: false,
-                  });
-                  console.log("tx failed", res);
-                }
-              })
-              .catch(() => State.update({ loading: false }));
-          })
-          .catch(() => State.update({ loading: false }));
-      } else {
-        const token = underlyingAsset;
-        signERC20Approval(userAddress, token, tokenName, amount, deadline)
-          .then((rawSig) => {
-            return supplyWithPermit(
-              userAddress,
-              token,
-              amount,
-              deadline,
-              rawSig
-            );
-          })
-          .then((tx) => {
-            tx.wait()
-              .then((res) => {
-                const { status } = res;
-                if (status === 1) {
-                  onActionSuccess({
-                    msg: `You supplied ${Big(amount)
-                      .div(Big(10).pow(decimals))
-                      .toFixed(8)} ${symbol}`,
-                    callback: () => {
-                      onRequestClose();
-                      State.update({
-                        loading: false,
-                      });
-                    },
-                  });
-                  console.log("tx succeeded", res);
-                } else {
-                  State.update({
-                    loading: false,
-                  });
-                  console.log("tx failed", res);
-                }
-              })
-              .catch(() => State.update({ loading: false }));
-          })
-          .catch(() => State.update({ loading: false }));
-      }
+    .then((address) => {
+      const aUSDContract = new ethers.Contract(
+        "contract_address",
+        "abi_contract",
+        Ethers.provider().getSigner()
+      );
+      return aUSDContract.depositStETH("param1", "param2", "param3", {
+        value: amount,
+      });
+    })
+    .then((tx) => {
+      tx.wait()
+        .then((res) => {
+          const { status } = res;
+          if (status === 1) {
+            onActionSuccess({
+              msg: `You supplied ${Big(amount)
+                .div(Big(10).pow(decimals))
+                .toFixed(8)} ${symbol}`,
+              callback: () => {
+                onRequestClose();
+                State.update({
+                  loading: false,
+                });
+              },
+            });
+            console.log("tx succeeded", res);
+          } else {
+            console.log("tx failed", res);
+            State.update({
+              loading: false,
+            });
+          }
+        })
+        .catch(() => State.update({ loading: false }));
     })
     .catch(() => State.update({ loading: false }));
 }
 
-const maxValue =
-  symbol === config.nativeCurrency.symbol
-    ? Big(balance).minus(MIN_ETH_GAS_FEE).toFixed(decimals)
-    : Big(balance).toFixed(decimals);
-
-function debounce(fn, wait) {
-  let timer = state.timer;
-  return () => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      fn();
-    }, wait);
-    State.update({ timer });
-  };
-}
+const maxValue = Big(balance).toFixed(3);
 
 const disabled =
   !state.amount || !isValid(state.amount) || Number(state.amount) === 0;
@@ -260,17 +167,15 @@ const changeValue = (value) => {
     value = "0";
   }
   if (isValid(value)) {
-    const amountInUSD = Big(value)
-      .mul(marketReferencePriceInUsd)
-      .toFixed(2, ROUND_DOWN);
+    const amountInUSD = Big(value).mul(priceInUsd).toFixed(2, ROUND_DOWN);
     State.update({
       amountInUSD,
+      amount: value,
     });
     updateNewHealthFactor();
   } else {
     State.update({
       amountInUSD: "0.00",
-      newHealthFactor: "-",
     });
   }
   State.update({ amount: value });
@@ -279,97 +184,105 @@ const changeValue = (value) => {
 return (
   <>
     <Widget
-      src={`${config.ownerId}/widget/AAVE.Modal.BaseModal`}
+      src={`${config.ownerId}/widget/AAVE.Modal.RoundedCard`}
       props={{
-        title: `Supply ${ETH}`,
-        onRequestClose: onRequestClose,
+        title: "Amount",
+        config,
         children: (
-          <WithdrawContainer>
+          <>
             <Widget
-              src={`${config.ownerId}/widget/AAVE.Modal.RoundedCard`}
+              src={`${config.ownerId}/widget/AAVE.Modal.FlexBetween`}
               props={{
-                title: "Amount",
-                config,
-                children: (
-                  <>
-                    <Widget
-                      src={`${config.ownerId}/widget/AAVE.Modal.FlexBetween`}
-                      props={{
-                        left: (
-                          <TokenTexture>
-                            <Input
-                              type="number"
-                              value={state.amount}
-                              onChange={(e) => {
-                                changeValue(e.target.value);
-                              }}
-                              placeholder="0"
-                            />
-                          </TokenTexture>
-                        ),
-                        right: (
-                          <TokenWrapper>
-                            <img
-                              width={26}
-                              height={26}
-                              src={`https://app.aave.com/icons/tokens/${"BAL".toLowerCase()}.svg`}
-                            />
-                            <TokenTexture>{"BAL"}</TokenTexture>
-                          </TokenWrapper>
-                        ),
+                left: (
+                  <TokenTexture>
+                    <Input
+                      type="number"
+                      value={state.amount}
+                      onChange={(e) => {
+                        changeValue(e.target.value);
                       }}
+                      placeholder="0"
                     />
-                    <Widget
-                      src={`${config.ownerId}/widget/AAVE.Modal.FlexBetween`}
-                      props={{
-                        left: <GrayTexture>${state.amountInUSD}</GrayTexture>,
-                        right: (
-                          <GrayTexture>
-                            Wallet Balance:{" "}
-                            {isValid(balance) && balance !== "-"
-                              ? Big(balance).toFixed(7)
-                              : balance}
-                            <Max
-                              onClick={() => {
-                                changeValue(maxValue);
-                              }}
-                            >
-                              MAX
-                            </Max>
-                          </GrayTexture>
-                        ),
-                      }}
+                  </TokenTexture>
+                ),
+                right: (
+                  <TokenWrapper>
+                    <img
+                      width={26}
+                      height={26}
+                      src={`https://app.aave.com/icons/tokens/${"BAL".toLowerCase()}.svg`}
                     />
-                  </>
+                    <TokenTexture>{"BAL"}</TokenTexture>
+                  </TokenWrapper>
                 ),
               }}
             />
-
             <Widget
-              src={`${config.ownerId}/widget/AAVE.PrimaryButton`}
+              src={`${config.ownerId}/widget/AAVE.Modal.FlexBetween`}
               props={{
-                config,
-                children: `Supply ${"BAL"}`,
-                loading: state.loading,
-                disabled,
-                onClick: () => {
-                  const amount = Big(state.amount)
-                    .mul(Big(10).pow(decimals))
-                    .toFixed(0);
-                  if (symbol === config.nativeCurrency.symbol) {
-                    // supply eth
-                    depositETH(amount);
-                  } else {
-                    // supply common
-                    depositErc20(amount);
-                  }
-                },
+                left: <GrayTexture>${state.amountInUSD}</GrayTexture>,
+                right: (
+                  <GrayTexture>
+                    Wallet Balance:{" "}
+                    {isValid(balance) && balance !== "-"
+                      ? Big(balance).toFixed(7)
+                      : balance}
+                    <Max
+                      onClick={() => {
+                        changeValue(maxValue);
+                      }}
+                    >
+                      MAX
+                    </Max>
+                  </GrayTexture>
+                ),
               }}
             />
-          </WithdrawContainer>
+          </>
         ),
+      }}
+    />
+    <br />
+    <Widget
+      src={`${config.ownerId}/widget/AAVE.PrimaryButton`}
+      props={{
         config,
+        children: `Supply ${"BAL"}`,
+        loading: state.loading,
+        disabled,
+        onClick: () => {
+          const amount = Big(state.amount)
+            .mul(Big(10).pow(decimals))
+            .toFixed(0);
+          // supply common erc20
+          depositStETH(amount);
+        },
       }}
     />
   </>
 );
+
+const props = {
+  // coming from parent
+  onActionSuccess: function onActionSuccess({ msg, callback }) {
+    // update data if action finishes
+    updateData(true);
+    // update UI after data has almost loaded
+    setTimeout(() => {
+      if (callback) {
+        callback();
+      }
+      if (msg) {
+        State.update({ alertModalText: msg });
+      }
+    }, 5000);
+  },
+  chainId: "1111111",
+  onRequestClose: () => console.log("onRequestClose"),
+  data: {
+    symbol: "BAL",
+    balance: "2",
+    priceInUsd: "2",
+    decimals: 18,
+  },
+};

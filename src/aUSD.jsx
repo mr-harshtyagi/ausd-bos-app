@@ -43,18 +43,6 @@ function getNetworkConfig(chainId) {
         ...abis,
         ...constants,
       };
-      return {
-        chainName: "Polygon zkEVM Testnet",
-        nativeCurrency: ETH_TOKEN,
-        nativeWrapCurrency: WETH_TOKEN,
-        rpcUrl: "https://rpc.public.zkevm-test.net",
-        aavePoolV3Address: "0x4412c92f6579D9FC542D108382c8D1d6D2Be63d9",
-        wrappedTokenGatewayV3Address:
-          "0xD82940E16D25aB1349914e1C369eF1b287d457BF",
-        balanceProviderAddress: "0x0da6DCAd2bE4801b644AEE679e0AdE008bB4bc6b",
-        ...abis,
-        ...constants,
-      };
     default:
       throw new Error("unknown chain id");
   }
@@ -170,9 +158,6 @@ const modules = {
   date: `${config.ownerId}/widget/Utils.Date`,
   data: `${config.ownerId}/widget/AAVE.Data`,
 };
-// Import functions
-// const { formatAmount } = state.imports.number;
-// const { formatDateTime } = state.imports.date;
 
 function checkProvider() {
   const provider = Ethers.provider();
@@ -265,7 +250,7 @@ const ChainImage = () => {
 };
 
 checkProvider();
-if (state.walletConnected && state.chainId && loading) {
+if (state.walletConnected && state.chainId) {
   updateData();
 }
 
@@ -719,26 +704,42 @@ const body = loading ? (
 
       {state.selectTab === "deposit" && (
         <>
-          <div> Deposit stETH</div>
           {/* Add prebuilt component to replace 🟡 */}
+          {state.walletConnected ? (
+            <div> Deposit stETH</div>
+          ) : (
+            "Need to connect wallet first."
+          )}
         </>
       )}
       {state.selectTab === "withdraw" && (
         <>
-          <div> Withdraw stETH</div>
           {/* Add prebuilt component to replace 🟡 */}
+          {state.walletConnected ? (
+            <div> Withdraw stETH</div>
+          ) : (
+            "Need to connect wallet first."
+          )}
         </>
       )}
       {state.selectTab === "mint" && (
         <>
-          <div> Mint aUSD</div>
           {/* Add prebuilt component to replace 🟡 */}
+          {state.walletConnected ? (
+            <div> Deposit stETH</div>
+          ) : (
+            "Need to connect wallet first."
+          )}
         </>
       )}
       {state.selectTab === "repay" && (
         <>
-          <div>Repay aUSD</div>
           {/* Add prebuilt component to replace 🟡 */}
+          {state.walletConnected ? (
+            <div> Deposit stETH</div>
+          ) : (
+            "Need to connect wallet first."
+          )}
         </>
       )}
       {/* Widget to replace 🟡 */}
