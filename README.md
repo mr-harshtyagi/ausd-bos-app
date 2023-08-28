@@ -1,6 +1,7 @@
 # ausd-bos-app (Decentralized Stablecoin Platform)
 
 This is a LSD backed interest bearing stablecoin protocol. Contracts are deployed on sepolia testnet.
+
 Deployed BOS app on Near : [aUSD-BOS-Frontend-APP](https://near.org/mr-harshtyagi.near/widget/Lido)
 
 ## Features
