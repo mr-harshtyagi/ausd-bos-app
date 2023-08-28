@@ -249,20 +249,20 @@ function onActionSuccess({ msg, callback }) {
   }, 5000);
 }
 
-const getChainImage = (chainId) => {
-  switch (chainId) {
+const getChainImage = (chainId) => {};
+
+const toggleDropdown = disabled
+  ? () => {}
+  : () => State.update({ showDropdown: !state.showDropdown });
+
+const ChainImage = () => {
+  switch (state.chainId) {
     case 11155111:
       return SepoliEthImage;
     default:
       throw new Error("unknown chain id");
   }
 };
-
-const toggleDropdown = disabled
-  ? () => {}
-  : () => State.update({ showDropdown: !state.showDropdown });
-
-const ChainImage = getChainImage(state.chainId);
 
 checkProvider();
 if (state.walletConnected && state.chainId && loading) {
