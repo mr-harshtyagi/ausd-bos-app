@@ -816,11 +816,164 @@ const changeDepositValue = (value) => {
   State.update({ depositAmount: value });
 };
 
-const PrimaryButton = styled.button`
+const DepositPrimaryButton = styled.button`
   border: 0;
 
   color: white;
   background: ${depositButtonDisabled ? "#36295C" : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+//withdraw section
+const withdrawMaxValue = Big(state.stEthBalance).toFixed(3);
+
+const withdrawButtonDisabled =
+  !state.withdrawAmount ||
+  !isValid(state.withdrawAmount) ||
+  Number(state.withdrawAmount) === 0;
+
+const changeWithdrawValue = (value) => {
+  if (Number(value) > Number(withdrawMaxValue)) {
+    value = withdrawMaxValue;
+  }
+  if (Number(value) < 0) {
+    value = "0";
+  }
+  if (isValid(value)) {
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    State.update({
+      withdrawAmountInUSD: amountInUSD,
+      withdrawAmount: value,
+    });
+  } else {
+    State.update({
+      withdrawAmountInUSD: "0.00",
+    });
+  }
+  State.update({ withdrawAmount: value });
+};
+
+const WithdrawPrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${state.withdrawButtonLoading || withdrawButtonDisabled
+    ? "#36295C"
+    : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+//mint section
+const mintMaxValue = Big(state.stEthBalance).toFixed(3);
+
+const mintButtonDisabled =
+  !state.mintAmount ||
+  !isValid(state.mintAmount) ||
+  Number(state.mintAmount) === 0;
+
+const changeMintValue = (value) => {
+  if (Number(value) > Number(mintMaxValue)) {
+    value = mintMaxValue;
+  }
+  if (Number(value) < 0) {
+    value = "0";
+  }
+  if (isValid(value)) {
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    State.update({
+      mintAmountInUSD: amountInUSD,
+      mintAmount: value,
+    });
+  } else {
+    State.update({
+      mintAmountInUSD: "0.00",
+    });
+  }
+  State.update({ mintAmount: value });
+};
+
+const MintPrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${state.mintButtonLoading || mintButtonDisabled
+    ? "#36295C"
+    : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+//repay section
+const repayMaxValue = Big(state.stEthBalance).toFixed(3);
+
+const repayButtonDisabled =
+  !state.repayAmount ||
+  !isValid(state.repayAmount) ||
+  Number(state.repayAmount) === 0;
+
+const changeRepayValue = (value) => {
+  if (Number(value) > Number(repayMaxValue)) {
+    value = repayMaxValue;
+  }
+  if (Number(value) < 0) {
+    value = "0";
+  }
+  if (isValid(value)) {
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    State.update({
+      repayAmountInUSD: amountInUSD,
+      repayAmount: value,
+    });
+  } else {
+    State.update({
+      repayAmountInUSD: "0.00",
+    });
+  }
+  State.update({ repayAmount: value });
+};
+
+const RepayPrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${state.repayButtonLoading || repayButtonDisabled
+    ? "#36295C"
+    : "#8247e5"};
   border-radius: 5px;
 
   height: 48px;
@@ -1127,30 +1280,183 @@ const body = loading ? (
       {state.selectTab === "withdraw" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
-            <div> Withdraw stETH</div>
+          {state.address ? (
+            <>
+              <GenericTitleTitle>Amount to Withdraw</GenericTitleTitle>
+              <Content>
+                {" "}
+                <>
+                  <FlexBetweenContainer>
+                    <TokenTexture>
+                      <Input
+                        type="number"
+                        value={state.withdrawAmount}
+                        onChange={(e) => {
+                          changeWithdrawValue(e.target.value);
+                        }}
+                        placeholder="0"
+                      />
+                    </TokenTexture>
+
+                    <TokenWrapper>
+                      <img
+                        width={26}
+                        height={26}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                      />
+                      <TokenTexture>{"stETH"}</TokenTexture>
+                    </TokenWrapper>
+                  </FlexBetweenContainer>
+                  <FlexBetweenContainer>
+                    <GrayTexture>${state.withdrawAmountInUSD}</GrayTexture>
+                    <GrayTexture>
+                      Wallet Balance:{" "}
+                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+                        ? Big(state.stEthBalance).toFixed(7)
+                        : state.stEthBalance}
+                      <Max
+                        onClick={() => {
+                          changeWithdrawValue(withdrawMaxValue);
+                        }}
+                      >
+                        MAX
+                      </Max>
+                    </GrayTexture>
+                  </FlexBetweenContainer>
+                </>
+              </Content>
+              <br />
+              <WithdrawPrimaryButtonPrimaryButton
+                onClick={() => withdrawStETH(state.withdrawAmount)}
+                disabled={state.withdrawButtonLoading || withdrawButtonDisabled}
+              >
+                {state.withdrawButtonLoading ? <Loading /> : "Withdraw"}
+              </WithdrawPrimaryButtonPrimaryButton>
+            </>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
       {state.selectTab === "mint" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
-            <div> Deposit stETH</div>
+          {state.address ? (
+            <>
+              <GenericTitleTitle>Amount to Mint</GenericTitleTitle>
+              <Content>
+                {" "}
+                <>
+                  <FlexBetweenContainer>
+                    <TokenTexture>
+                      <Input
+                        type="number"
+                        value={state.mintAmount}
+                        onChange={(e) => {
+                          changeMintValue(e.target.value);
+                        }}
+                        placeholder="0"
+                      />
+                    </TokenTexture>
+
+                    <TokenWrapper>
+                      <img
+                        width={26}
+                        height={26}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                      />
+                      <TokenTexture>{"stETH"}</TokenTexture>
+                    </TokenWrapper>
+                  </FlexBetweenContainer>
+                  <FlexBetweenContainer>
+                    <GrayTexture>${state.mintAmountInUSD}</GrayTexture>
+                    <GrayTexture>
+                      Wallet Balance:{" "}
+                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+                        ? Big(state.stEthBalance).toFixed(7)
+                        : state.stEthBalance}
+                      <Max
+                        onClick={() => {
+                          changeMintValue(mintMaxValue);
+                        }}
+                      >
+                        MAX
+                      </Max>
+                    </GrayTexture>
+                  </FlexBetweenContainer>
+                </>
+              </Content>
+              <br />
+              <MintPrimaryButtonPrimaryButton
+                onClick={() => mintStETH(state.mintAmount)}
+                disabled={state.mintButtonLoading || mintButtonDisabled}
+              >
+                {state.mintButtonLoading ? <Loading /> : "Mint"}
+              </MintPrimaryButtonPrimaryButton>
+            </>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
       {state.selectTab === "repay" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
-            <div> Deposit stETH</div>
+          {state.address ? (
+            <>
+              <GenericTitleTitle>Amount to Repay</GenericTitleTitle>
+              <Content>
+                {" "}
+                <>
+                  <FlexBetweenContainer>
+                    <TokenTexture>
+                      <Input
+                        type="number"
+                        value={state.repayAmount}
+                        onChange={(e) => {
+                          changeRepayValue(e.target.value);
+                        }}
+                        placeholder="0"
+                      />
+                    </TokenTexture>
+
+                    <TokenWrapper>
+                      <img
+                        width={26}
+                        height={26}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                      />
+                      <TokenTexture>{"stETH"}</TokenTexture>
+                    </TokenWrapper>
+                  </FlexBetweenContainer>
+                  <FlexBetweenContainer>
+                    <GrayTexture>${state.repayAmountInUSD}</GrayTexture>
+                    <GrayTexture>
+                      Wallet Balance:{" "}
+                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+                        ? Big(state.stEthBalance).toFixed(7)
+                        : state.stEthBalance}
+                      <Max
+                        onClick={() => {
+                          changeRepayValue(repayMaxValue);
+                        }}
+                      >
+                        MAX
+                      </Max>
+                    </GrayTexture>
+                  </FlexBetweenContainer>
+                </>
+              </Content>
+              <br />
+              <RepayPrimaryButtonPrimaryButton
+                onClick={() => repayStETH(state.repayAmount)}
+                disabled={state.repayButtonLoading || repayButtonDisabled}
+              >
+                {state.SrepayButtonLoading ? <Loading /> : "Repay"}
+              </RepayPrimaryButtonPrimaryButton>
+            </>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
