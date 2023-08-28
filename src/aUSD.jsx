@@ -1,5 +1,6 @@
 // main aUSD BOS app component
 
+// 🟢
 const ROUND_DOWN = 0;
 const CONTRACT_ABI = {
   aUSD_ABI:
@@ -14,7 +15,7 @@ const NATIVE_SYMBOL_ADDRESS_MAP_KEY = "0x0";
 const ETH_TOKEN = { name: "Ethereum", symbol: "ETH", decimals: 18 };
 const WETH_TOKEN = { name: "Wrapped Ether", symbol: "WETH", decimals: 18 };
 
-// Get AUSD network config by chain id 🟢
+// Get aUSD network config by chain id 🟢
 function getNetworkConfig(chainId) {
   const abis = {
     aUSD_ABI: fetch(CONTRACT_ABI.aUSD_ABI),
@@ -83,6 +84,7 @@ function switchEthereumChain(chainId) {
   }
 }
 
+// 🟢
 if (
   state.chainId === undefined &&
   ethers !== undefined &&
@@ -110,115 +112,7 @@ function isValid(a) {
   return true;
 }
 
-function getGasPrice() {
-  return Ethers.provider().getGasPrice();
-}
-
-function gasEstimation(action) {
-  const assetsToSupply = state.assetsToSupply;
-  if (!assetsToSupply) {
-    return "-";
-  }
-  const baseAsset = assetsToSupply.find(
-    (asset) => asset.symbol === config.nativeCurrency.symbol
-  );
-  if (!baseAsset) {
-    return "-";
-  }
-  const { marketReferencePriceInUsd, decimals } = baseAsset;
-  return getGasPrice().then((gasPrice) => {
-    const gasLimit = GAS_LIMIT_RECOMMENDATIONS[action].limit;
-    return Big(gasPrice.toString())
-      .mul(gasLimit)
-      .div(Big(10).pow(decimals))
-      .mul(marketReferencePriceInUsd)
-      .toFixed(2);
-  });
-}
-
-function depositETHGas() {
-  return gasEstimation("deposit");
-}
-
-function depositERC20Gas() {
-  return gasEstimation("supplyWithPermit");
-}
-
-function withdrawETHGas() {
-  return gasEstimation("withdrawETH");
-}
-
-function withdrawERC20Gas() {
-  return gasEstimation("withdraw");
-}
-
-function borrowETHGas() {
-  return gasEstimation("borrowETH");
-}
-
-function borrowERC20Gas() {
-  return gasEstimation("borrow");
-}
-
-function repayETHGas() {
-  return gasEstimation("repay");
-}
-
-function repayERC20Gas() {
-  return gasEstimation("repayWithPermit");
-}
-
-// interface Market {
-//   id: string,
-//   underlyingAsset: string,
-//   name: string,
-//   symbol: string,
-//   decimals: number,
-//   supplyAPY: string;
-//   marketReferencePriceInUsd: string;
-//   usageAsCollateralEnabled: boolean;
-//   aTokenAddress: string;
-//   variableBorrowAPY: string;
-// }
-// returns Market[]
-// function getMarkets(chainId) {
-//   return asyncFetch(`${config.AAVE_API_BASE_URL}/${chainId}/markets`);
-// }
-
-/**
- * @param {string} account user address
- * @param {string[]} tokens list of token addresses
- */
-// interface TokenBalance {
-//   token: string,
-//   balance: string,
-//   decimals: number,
-// }
-// returns TokenBalance[]
-// function getUserBalances(chainId, account, tokens) {
-//   const url = `${
-//     config.AAVE_API_BASE_URL
-//   }/${chainId}/balances?account=${account}&tokens=${tokens.join("|")}`;
-//   return asyncFetch(url);
-// }
-
-// interface UserDeposit {
-//   underlyingAsset: string,
-//   name: string,
-//   symbol: string,
-//   scaledATokenBalance: string,
-//   usageAsCollateralEnabledOnUser: boolean,
-//   underlyingBalance: string,
-//   underlyingBalanceUSD: string,
-// }
-// returns UserDeposit[]
-// function getUserDeposits(chainId, address) {
-//   return asyncFetch(
-//     `${config.AAVE_API_BASE_URL}/${chainId}/deposits/${address}`
-//   );
-// }
-
-// App config
+// App config 🟢
 function getConfig(network) {
   const chainId = state.chainId;
   switch (network) {
@@ -241,6 +135,7 @@ State.init({
   imports: {},
   chainId: undefined, // chainId is undefined in the case of unsupported chains
   isChainSupported: true,
+  showDropdown: false,
   showWithdrawModal: false,
   showSupplyModal: false,
   showRepayModal: false,
@@ -252,11 +147,13 @@ State.init({
   yourBorrows: undefined,
   address: undefined,
   baseAssetBalance: undefined,
-  selectTab: "supply", // supply | borrow
+  selectTab: "deposit", // deposit | withdraw | mint | repay
+  totalDeposits: "1700",
+  stablecoinApy: "8.33",
+  healthFactor: "1.5",
 });
 
-const loading =
-  !state.assetsToSupply || !state.yourSupplies || !state.assetsToBorrow;
+const loading = !state.walletConnected;
 
 // Import functions to state.imports
 function importFunctions(imports) {
@@ -284,15 +181,6 @@ function checkProvider() {
   } else {
     State.update({ walletConnected: false });
   }
-}
-
-function calculateAvailableBorrows({
-  availableBorrowsUSD,
-  marketReferencePriceInUsd,
-}) {
-  return isValid(availableBorrowsUSD) && isValid(marketReferencePriceInUsd)
-    ? Big(availableBorrowsUSD).div(marketReferencePriceInUsd).toFixed()
-    : Number(0).toFixed();
 }
 
 function bigMin(_a, _b) {
@@ -345,204 +233,6 @@ function updateData(refresh) {
   if (!state.address || !state.baseAssetBalance) {
     return;
   }
-
-  getMarkets(state.chainId).then((marketsResponse) => {
-    if (!marketsResponse) {
-      return;
-    }
-    const markets = marketsResponse.body;
-    const marketsMapping = markets.reduce((prev, cur) => {
-      prev[cur.underlyingAsset] = cur;
-      return prev;
-    }, {});
-
-    const nativeMarket = markets.find(
-      (market) => market.symbol === config.nativeWrapCurrency.symbol
-    );
-    markets.push({
-      ...nativeMarket,
-      ...{
-        ...config.nativeCurrency,
-        supportPermit: true,
-      },
-    });
-
-    // get user balances
-    batchBalanceOf(
-      state.chainId,
-      state.address,
-      markets.map((market) => market.underlyingAsset),
-      config.walletBalanceProviderABI
-    )
-      .then((balances) => balances.map((balance) => balance.toString()))
-      .then((userBalances) => {
-        const assetsToSupply = markets
-          .map((market, idx) => {
-            const balanceRaw = Big(
-              market.symbol === config.nativeCurrency.symbol
-                ? state.baseAssetBalance
-                : userBalances[idx]
-            ).div(Big(10).pow(market.decimals));
-            const balance = balanceRaw.toFixed(market.decimals, ROUND_DOWN);
-            const balanceInUSD = balanceRaw
-              .mul(market.marketReferencePriceInUsd)
-              .toFixed(3, ROUND_DOWN);
-            return {
-              ...market,
-              balance,
-              balanceInUSD,
-            };
-          })
-          .sort((asset1, asset2) => {
-            const balanceInUSD1 = Number(asset1.balanceInUSD);
-            const balanceInUSD2 = Number(asset2.balanceInUSD);
-            if (balanceInUSD1 !== balanceInUSD2)
-              return balanceInUSD2 - balanceInUSD1;
-            return asset1.symbol.localeCompare(asset2.symbol);
-          });
-
-        State.update({
-          assetsToSupply,
-        });
-        // get user borrow data
-        updateUserDebts(marketsMapping, assetsToSupply, refresh);
-      });
-    // get user supplies
-    updateUserSupplies(marketsMapping, refresh);
-  });
-}
-
-function updateUserSupplies(marketsMapping, refresh) {
-  const prevYourSupplies = state.yourSupplies;
-  getUserDeposits(state.chainId, state.address).then((userDepositsResponse) => {
-    if (!userDepositsResponse) {
-      return;
-    }
-    const userDeposits = userDepositsResponse.body.filter(
-      (row) => Number(row.underlyingBalance) !== 0
-    );
-    const yourSupplies = userDeposits.map((userDeposit) => {
-      const market = marketsMapping[userDeposit.underlyingAsset];
-      return {
-        ...market,
-        ...userDeposit,
-        ...(market.symbol === config.nativeWrapCurrency.symbol
-          ? {
-              ...config.nativeCurrency,
-              supportPermit: true,
-            }
-          : {}),
-      };
-    });
-
-    State.update({
-      yourSupplies,
-    });
-
-    if (
-      refresh &&
-      JSON.stringify(prevYourSupplies) === JSON.stringify(yourSupplies) &&
-      yourSupplies.length !== 0
-    ) {
-      console.log("refresh supplies again ...", prevYourSupplies, yourSupplies);
-      setTimeout(updateData, 500);
-    }
-  });
-}
-
-function updateUserDebts(marketsMapping, assetsToSupply, refresh) {
-  if (!marketsMapping || !assetsToSupply) {
-    return;
-  }
-
-  const prevYourBorrows = state.yourBorrows;
-  // userDebts depends on the balance from assetsToSupply
-  const assetsToSupplyMap = assetsToSupply.reduce((prev, cur) => {
-    if (cur.symbol !== config.nativeCurrency.symbol) {
-      prev[cur.underlyingAsset] = cur;
-    } else {
-      prev[NATIVE_SYMBOL_ADDRESS_MAP_KEY] = cur;
-    }
-    return prev;
-  }, {});
-
-  getUserDebts(state.chainId, state.address).then((userDebtsResponse) => {
-    if (!userDebtsResponse) {
-      return;
-    }
-    const userDebts = userDebtsResponse.body;
-    const assetsToBorrow = {
-      ...userDebts,
-      healthFactor: formatHealthFactor(userDebts.healthFactor),
-      debts: userDebts.debts
-        .map((userDebt) => {
-          const market = marketsMapping[userDebt.underlyingAsset];
-          if (!market) {
-            return;
-          }
-          const { availableLiquidityUSD } = market;
-          const availableBorrowsUSD = bigMin(
-            userDebts.availableBorrowsUSD,
-            availableLiquidityUSD
-          )
-            .times(ACTUAL_BORROW_AMOUNT_RATE)
-            .toFixed();
-          const assetsToSupplyMapKey =
-            market.symbol === config.nativeWrapCurrency.symbol
-              ? NATIVE_SYMBOL_ADDRESS_MAP_KEY
-              : userDebt.underlyingAsset;
-          return {
-            ...market,
-            ...userDebt,
-            ...(market.symbol === config.nativeWrapCurrency.symbol
-              ? {
-                  ...config.nativeCurrency,
-                  supportPermit: true,
-                }
-              : {}),
-            availableBorrows: calculateAvailableBorrows({
-              availableBorrowsUSD,
-              marketReferencePriceInUsd: market.marketReferencePriceInUsd,
-            }),
-            availableBorrowsUSD,
-            balance: assetsToSupplyMap[assetsToSupplyMapKey].balance,
-            balanceInUSD: assetsToSupplyMap[assetsToSupplyMapKey].balanceInUSD,
-          };
-        })
-        .filter((asset) => !!asset)
-        .sort((asset1, asset2) => {
-          const availableBorrowsUSD1 = Number(asset1.availableBorrowsUSD);
-          const availableBorrowsUSD2 = Number(asset2.availableBorrowsUSD);
-          if (availableBorrowsUSD1 !== availableBorrowsUSD2)
-            return availableBorrowsUSD2 - availableBorrowsUSD1;
-          return asset1.symbol.localeCompare(asset2.symbol);
-        })
-        .filter((asset) => {
-          return asset.borrowingEnabled;
-        }),
-    };
-    const yourBorrows = {
-      ...assetsToBorrow,
-      debts: assetsToBorrow.debts.filter(
-        (row) =>
-          !isNaN(Number(row.variableBorrowsUSD)) &&
-          Number(row.variableBorrowsUSD) > 0
-      ),
-    };
-
-    State.update({
-      yourBorrows,
-      assetsToBorrow,
-    });
-
-    if (
-      refresh &&
-      JSON.stringify(prevYourBorrows) === JSON.stringify(yourBorrows)
-    ) {
-      console.log("refresh borrows again ...", prevYourBorrows, yourBorrows);
-      setTimeout(updateData, 500);
-    }
-  });
 }
 
 function onActionSuccess({ msg, callback }) {
@@ -559,11 +249,49 @@ function onActionSuccess({ msg, callback }) {
   }, 5000);
 }
 
+const getChainImage = (chainId) => {
+  switch (chainId) {
+    case 11155111:
+      return SepoliEthImage;
+    default:
+      throw new Error("unknown chain id");
+  }
+};
+
+const toggleDropdown = disabled
+  ? () => {}
+  : () => State.update({ showDropdown: !state.showDropdown });
+
+const ChainImage = getChainImage(state.chainId);
+
 checkProvider();
 if (state.walletConnected && state.chainId && loading) {
   updateData();
 }
 
+const AUSDLogo = () => (
+  <img
+    height={25}
+    className="logo"
+    src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/1657682b919b92878e17f35a62a787590da08258/src/Images/aUSD-LOGO.svg`}
+  />
+);
+
+const DropdownImage = () => (
+  <img
+    className="dropdown-img"
+    src={`${config.ipfsPrefix}/bafkreiexo22bzy2dnto7xlzee5dgz3mkb5smmpvzdgx7ed3clbw3ad3jsa`}
+  />
+);
+
+const SepoliEthImage = () => (
+  <img
+    className="network-img"
+    src={`${config.ipfsPrefix}/bafkreih7c6cip4ckunan7c3n5ckyf56mfnqmu7u5zgvxvhqvjsyf76kwxy`}
+  />
+);
+
+// Styled Components
 const Body = styled.div`
   padding: 24px 15px;
   background: #0e0e26;
@@ -577,10 +305,285 @@ const FlexContainer = styled.div`
   align-items: center;
   flex-direction: column;
 `;
+
+const Header = styled.div`
+  padding: 18px 15px;
+  background: #151718;
+
+  display: flex;
+  justify-content: space-between;
+
+  .web3-connect {
+    font-size: 12px;
+    font-weight: bold;
+
+    display: grid;
+    place-content: center;
+
+    background: #262626;
+    border-radius: 5px;
+    border: 0;
+
+    color: white;
+    transition: all 300ms ease-in-out;
+    &:hover {
+      background: #262626;
+      opacity: 0.5;
+    }
+    &:active {
+      background: #262626 !important;
+    }
+  }
+  .logo {
+    color: white;
+    scale: 7;
+    margin-left: 42px;
+  }
+`;
+
+const SwitchContainer = styled.div`
+  display: flex;
+  align-items: center;
+  cursor: ${disabled ? "auto" : "pointer"};
+
+  position: relative;
+
+  .dropdown-pc {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 80px;
+    min-width: 260px;
+
+    background: #151718;
+    padding: 20px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    z-index: 1;
+    box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3);
+  }
+
+  .network-img {
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .dropdown-img {
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    transition: all 0.3s ease-in-out;
+
+    transform: rotate(${() => (state.showDropdown ? "0deg" : "180deg")});
+  }
+
+  @media (min-width: 640px) {
+    justify-content: center;
+
+    img {
+      height: 60px;
+    }
+
+    .network-img {
+      width: 32px;
+      height: 32px;
+    }
+
+    .dropdown-img {
+      width: 32px;
+      height: 32px;
+    }
+
+    .dropdown-pc {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .dropdown-pc-item {
+      display: flex;
+      align-items: center;
+
+      div {
+        margin-left: 10px;
+      }
+    }
+  }
+`;
+
+const SwitchTitle = styled.div`
+  color: white;
+
+  font-size: 18px;
+  margin-left: 8px;
+
+  @media (min-width: 640px) {
+    font-size: 36px;
+    font-weight: bold;
+  }
+`;
+
+const DropdownMobile = styled.div`
+  position: fixed;
+  z-index: 9999;
+
+  height: 80vh;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: #151718;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  padding: 20px 12px;
+  font-size: 12px;
+
+  .dropdown-mobile-item {
+    .dropdown-img {
+      width: 32px;
+      height: 32px;
+    }
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+
+    div {
+      margin-left: 10px;
+    }
+  }
+
+  @media (min-width: 640px) {
+    display: none;
+  }
+`;
+
+const DropdownContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const HeroDataContainer = styled.div`
+  margin-top: 40px;
+  width: 100%;
+  gap: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  @media (min-width: 640px) {
+    width: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr ${showHealthFactor ? "1fr" : ""};
+    gap: 90px;
+    text-align: center;
+  }
+`;
+
+const KVData = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @media (min-width: 640px) {
+    width: auto;
+    display: block;
+  }
+
+  .key {
+    font-size: 14px;
+    font-weight: 500;
+    @media (min-width: 640px) {
+      font-size: 14px;
+    }
+  }
+  .value {
+    font-size: 14px;
+    font-weight: 700;
+    @media (min-width: 640px) {
+      font-size: 22px;
+    }
+  }
+  .text-green {
+    color: #2cffa7;
+  }
+`;
+
+const heroData = [
+  {
+    name: "Total Deposit",
+    value: `${state.totalDeposits} USD`,
+  },
+  {
+    name: "Stablecoin APY",
+    value: `${state.stablecoinApy} %`,
+  },
+
+  {
+    name: "Health Factor",
+    value: `${state.healthFactor}`,
+  },
+].filter((element) => !!element);
+
+const TabContainer = styled.div`
+  background: #212233;
+
+  display: flex;
+  padding: 4px;
+  border-radius: 10px;
+
+  margin-top: 30px;
+
+  @media (min-width: 640px) {
+    max-width: 355px;
+    margin: 0 auto;
+    margin-top: 50px;
+  }
+`;
+
+const TabItem = styled.div`
+  flex: 1;
+  height: 48px;
+
+  display: grid;
+  place-content: center;
+  border-radius: 10px;
+
+  ${(props) => props.selected && "background: #8247E5;"}
+  ${(props) =>
+    props.disabled &&
+    `
+    opacity: 0.3;
+    cursor: not-allowed;
+  `}
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease-in-out;
+  ${(props) =>
+    !props.selected &&
+    `
+    cursor: pointer;
+    &:hover {
+      background: #8247E5;
+      opacity: 0.7;
+    }
+  `}
+`;
+
 // Component body
 const body = loading ? (
   <>
-    <Widget src={`${config.ownerId}/widget/AAVE.Header`} props={{ config }} />
+    {/* Widget to replace 🟢 */}
+    <Header>
+      <AUSDLogo />
+      <Web3Connect className="web3-connect" connectLabel="Connect Wallet" />
+    </Header>
     <Body>
       {state.walletConnected
         ? state.isChainSupported
@@ -593,56 +596,104 @@ const body = loading ? (
   </>
 ) : (
   <>
-    <Widget src={`${config.ownerId}/widget/AAVE.Header`} props={{ config }} />
+    {/* Widget to replace 🟢 */}
+    <Header>
+      <AUSDLogo />
+      <Web3Connect className="web3-connect" connectLabel="Connect Wallet" />
+    </Header>
     <Body>
       <FlexContainer>
-        <Widget
-          src={`${config.ownerId}/widget/AAVE.NetworkSwitcher`}
-          props={{
-            chainId: state.chainId,
-            config,
-            switchNetwork: (chainId) => {
-              switchEthereumChain(chainId);
-            },
-          }}
-        />
-        <Widget
-          src={`${config.ownerId}/widget/AAVE.HeroData`}
-          props={{
-            config,
-            netWorth: `$ ${
-              state.assetsToBorrow?.netWorthUSD
-                ? Big(state.assetsToBorrow.netWorthUSD).toFixed(2)
-                : "-"
-            }`,
-            netApy: `${
-              state.assetsToBorrow?.netAPY
-                ? Number(
-                    Big(state.assetsToBorrow.netAPY).times(100).toFixed(2)
-                  ) === 0
-                  ? "0.00"
-                  : Big(state.assetsToBorrow.netAPY).times(100).toFixed(2)
-                : "-"
-            }%`,
-            healthFactor: formatHealthFactor(state.assetsToBorrow.healthFactor),
-            showHealthFactor:
-              state.yourBorrows &&
-              state.yourBorrows.debts &&
-              state.yourBorrows.debts.length > 0,
-          }}
-        />
+        {/* Widget to replace 🟢 */}
+        <SwitchContainer>
+          {state.showDropdown && (
+            <DropdownMobile>
+              <div>Select aUSD Market</div>
+              <div
+                className="dropdown-mobile-item"
+                onClick={() => {
+                  State.update({ showDropdown: false });
+                  switchEthereumChain(11155111);
+                }}
+              >
+                <SepoliEthImage />
+                <div>Sepolia Testnet</div>
+              </div>
+            </DropdownMobile>
+          )}
+          <DropdownContainer onClick={toggleDropdown}>
+            <ChainImage />
+            <SwitchTitle>{config.chainName}</SwitchTitle>
+            {!disabled && <DropdownImage />}
+          </DropdownContainer>
+          {state.showDropdown && (
+            <div className="dropdown-pc">
+              <div>Select aUSD Market</div>
+              <div
+                className="dropdown-pc-item"
+                onClick={() => {
+                  State.update({ showDropdown: false });
+                  switchEthereumChain(11155111);
+                }}
+              >
+                <SepoliEthImage />
+                <div>Sepolia Testnet</div>
+              </div>
+            </div>
+          )}
+        </SwitchContainer>
+
+        {/* Widget to replace 🟢 */}
+        <HeroDataContainer>
+          {heroData.map((row) => (
+            <KVData key={row.name}>
+              <div className="key">{row.name}</div>
+              <div
+                className={[
+                  "value",
+                  row.name === "Health Factor" ? "text-green" : undefined,
+                ]
+                  .filter((value) => !!value)
+                  .join(" ")}
+              >
+                {row.value}
+              </div>
+            </KVData>
+          ))}
+        </HeroDataContainer>
       </FlexContainer>
-      <Widget
-        src={`${config.ownerId}/widget/AAVE.TabSwitcher`}
-        props={{
-          config,
-          select: state.selectTab,
-          setSelect: (tabName) => State.update({ selectTab: tabName }),
-        }}
-      />
-      {state.selectTab === "supply" && (
+
+      {/* Widget to replace 🟢 */}
+      <TabContainer>
+        <TabItem
+          selected={state.selectTab === "deposit"}
+          onClick={() => State.update({ selectTab: "deposit" })}
+        >
+          Deposit
+        </TabItem>
+        <TabItem
+          selected={state.selectTab === "withdraw"}
+          onClick={() => State.update({ selectTab: "withdraw" })}
+        >
+          Withdraw
+        </TabItem>
+        <TabItem
+          selected={state.selectTab === "mint"}
+          onClick={() => State.update({ selectTab: "mint" })}
+        >
+          Mint
+        </TabItem>
+        <TabItem
+          selected={state.selectTab === "repay"}
+          onClick={() => State.update({ selectTab: "repay" })}
+        >
+          Repay
+        </TabItem>
+      </TabContainer>
+
+      {state.selectTab === "deposit" && (
         <>
-          <Widget
+          {/* Add prebuilt component to replace 🟡 */}
+          {/* <Widget
             src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
             props={{
               config,
@@ -677,49 +728,133 @@ const body = loading ? (
               depositETHGas,
               depositERC20Gas,
             }}
-          />
+          /> */}
         </>
       )}
-      {state.selectTab === "borrow" && (
+      {state.selectTab === "withdraw" && (
         <>
-          <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.YourBorrows`}
+          {/* Add prebuilt component to replace 🟡 */}
+          {/* <Widget
+            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
             props={{
               config,
               chainId: state.chainId,
-              yourBorrows: state.yourBorrows,
-              showRepayModal: state.showRepayModal,
-              setShowRepayModal: (isShow) =>
-                State.update({ showRepayModal: isShow }),
-              showBorrowModal: state.showBorrowModal,
-              setShowBorrowModal: (isShow) =>
-                State.update({ showBorrowModal: isShow }),
-              formatHealthFactor,
-              onActionSuccess,
-              repayETHGas,
-              repayERC20Gas,
-              borrowETHGas,
-              borrowERC20Gas,
-            }}
-          />
-          <Widget
-            src={`${config.ownerId}/widget/AAVE.Card.AssetsToBorrow`}
-            props={{
-              config,
-              chainId: state.chainId,
-              assetsToBorrow: state.assetsToBorrow,
-              showBorrowModal: state.showBorrowModal,
               yourSupplies: state.yourSupplies,
-              setShowBorrowModal: (isShow) =>
-                State.update({ showBorrowModal: isShow }),
-              formatHealthFactor,
+              showWithdrawModal: state.showWithdrawModal,
+              setShowWithdrawModal: (isShow) =>
+                State.update({ showWithdrawModal: isShow }),
               onActionSuccess,
-              borrowETHGas,
-              borrowERC20Gas,
+              healthFactor: formatHealthFactor(
+                state.assetsToBorrow.healthFactor
+              ),
+              formatHealthFactor,
+              withdrawETHGas,
+              withdrawERC20Gas,
             }}
           />
+          <Widget
+            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
+            props={{
+              config,
+              chainId: state.chainId,
+              assetsToSupply: state.assetsToSupply,
+              showSupplyModal: state.showSupplyModal,
+              setShowSupplyModal: (isShow) =>
+                State.update({ showSupplyModal: isShow }),
+              onActionSuccess,
+              healthFactor: formatHealthFactor(
+                state.assetsToBorrow.healthFactor
+              ),
+              formatHealthFactor,
+              depositETHGas,
+              depositERC20Gas,
+            }}
+          /> */}
         </>
       )}
+      {state.selectTab === "mint" && (
+        <>
+          {/* Add prebuilt component to replace 🟡 */}
+          {/* <Widget
+            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
+            props={{
+              config,
+              chainId: state.chainId,
+              yourSupplies: state.yourSupplies,
+              showWithdrawModal: state.showWithdrawModal,
+              setShowWithdrawModal: (isShow) =>
+                State.update({ showWithdrawModal: isShow }),
+              onActionSuccess,
+              healthFactor: formatHealthFactor(
+                state.assetsToBorrow.healthFactor
+              ),
+              formatHealthFactor,
+              withdrawETHGas,
+              withdrawERC20Gas,
+            }}
+          />
+          <Widget
+            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
+            props={{
+              config,
+              chainId: state.chainId,
+              assetsToSupply: state.assetsToSupply,
+              showSupplyModal: state.showSupplyModal,
+              setShowSupplyModal: (isShow) =>
+                State.update({ showSupplyModal: isShow }),
+              onActionSuccess,
+              healthFactor: formatHealthFactor(
+                state.assetsToBorrow.healthFactor
+              ),
+              formatHealthFactor,
+              depositETHGas,
+              depositERC20Gas,
+            }}
+          /> */}
+        </>
+      )}
+      {state.selectTab === "repay" && (
+        <>
+          {/* Add prebuilt component to replace 🟡 */}
+          {/* <Widget
+            src={`${config.ownerId}/widget/AAVE.Card.YourSupplies`}
+            props={{
+              config,
+              chainId: state.chainId,
+              yourSupplies: state.yourSupplies,
+              showWithdrawModal: state.showWithdrawModal,
+              setShowWithdrawModal: (isShow) =>
+                State.update({ showWithdrawModal: isShow }),
+              onActionSuccess,
+              healthFactor: formatHealthFactor(
+                state.assetsToBorrow.healthFactor
+              ),
+              formatHealthFactor,
+              withdrawETHGas,
+              withdrawERC20Gas,
+            }}
+          />
+          <Widget
+            src={`${config.ownerId}/widget/AAVE.Card.AssetsToSupply`}
+            props={{
+              config,
+              chainId: state.chainId,
+              assetsToSupply: state.assetsToSupply,
+              showSupplyModal: state.showSupplyModal,
+              setShowSupplyModal: (isShow) =>
+                State.update({ showSupplyModal: isShow }),
+              onActionSuccess,
+              healthFactor: formatHealthFactor(
+                state.assetsToBorrow.healthFactor
+              ),
+              formatHealthFactor,
+              depositETHGas,
+              depositERC20Gas,
+            }}
+          /> */}
+        </>
+      )}
+      {/* Widget to replace 🟡 */}
       {state.alertModalText && (
         <Widget
           src={`${config.ownerId}/widget/AAVE.Modal.AlertModal`}
