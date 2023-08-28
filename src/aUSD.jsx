@@ -10,6 +10,9 @@ const CONTRACT_ABI = {
   aUSD_Oracle_ABI:
     "https://raw.githubusercontent.com/corndao/aave-v3-bos-app/main/abi/AAVEPoolV3.json",
 };
+const CONTRACT_ADDRESS = fetch(
+  "https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/contract_addresses.json"
+);
 const DEFAULT_CHAIN_ID = 11155111;
 const NATIVE_SYMBOL_ADDRESS_MAP_KEY = "0x0";
 const ETH_TOKEN = { name: "Ethereum", symbol: "ETH", decimals: 18 };
@@ -28,8 +31,20 @@ State.init({
   depositAmountInUSD: "0.00",
   depositButtonLoading: false,
   depositedStEth: undefined, // withdraw
+  depositedStEthInUSD: undefined,
+  withdrawAmount: "",
+  withdrawAmountInUSD: "0.00",
+  withdrawButtonLoading: false,
   mintableaUSD: undefined, //mint
+  mintableaUSDInUSD: undefined,
+  mintAmount: "",
+  mintAmountInUSD: "0.00",
+  mintButtonLoading: false,
   mintedaUSD: undefined, // repay
+  mintedaUSDInUSD: undefined,
+  repayAmount: "",
+  repayAmountInUSD: "0.00",
+  repayButtonLoading: false,
   address: undefined,
   selectTab: "deposit", // deposit | withdraw | mint | repay
   totalDeposits: "1700",
@@ -37,6 +52,22 @@ State.init({
   healthFactor: "1.5",
   alertModalText: false,
 });
+
+// App config 🟢
+function getConfig(network) {
+  const chainId = state.chainId;
+  switch (network) {
+    case "testnet":
+      return {
+        ownerId: "aave-v3.near",
+        nodeUrl: "https://rpc.mainnet.near.org",
+        ipfsPrefix: "https://ipfs.near.social/ipfs",
+        ...(chainId ? getNetworkConfig(chainId) : {}),
+      };
+    default:
+      throw Error(`Unconfigured environment '${network}'.`);
+  }
+}
 
 // Get aUSD network config by chain id 🟢
 function getNetworkConfig(chainId) {
@@ -46,25 +77,17 @@ function getNetworkConfig(chainId) {
     aUSD_Oracle_ABI: fetch(CONTRACT_ABI.aUSD_Oracle_ABI),
   };
 
-  const constants = {
-    FIXED_LIQUIDATION_VALUE: "1.0",
-    MAX_UINT_256:
-      "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    // AAVE_API_BASE_URL: "https://aave-data-service-7a85eea3aebe.herokuapp.com",
-  };
-
   switch (chainId) {
     case 11155111: // Sepolia testnet
       return {
         chainName: "Sepolia Testnet",
         nativeCurrency: ETH_TOKEN,
         nativeWrapCurrency: WETH_TOKEN,
-        rpcUrl: "https://eth-sepolia.g.alchemy.com/v2/demo",
-        aUSDAddress: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
-        erc20_stETHAddress: "0xD322A49006FC828F9B5B37Ab215F99B4E5caB19C",
-        aUSD_OracleAddress: "0xC7be5307ba715ce89b152f3Df0658295b3dbA8E2",
+        rpcUrl: "https://rpc2.sepolia.org",
+        aUSDAddress: CONTRACT_ADDRESS.aUSDAddress,
+        erc20_stETHAddress: CONTRACT_ADDRESS.erc20_stETHAddress,
+        aUSD_OracleAddress: CONTRACT_ADDRESS.aUSD_OracleAddress,
         ...abis,
-        ...constants,
       };
     default:
       throw new Error("unknown chain id");
@@ -79,24 +102,73 @@ function switchEthereumChain(chainId) {
   ]);
   // If `res` === `undefined`, it means switch chain failed, which is very weird but it works.
   // If `res` is `null` the function is either not called or executed successfully.
-  // if (res === undefined) {
-  //   console.log(
-  //     `Failed to switch chain to ${chainId}. Add the chain to wallet`
-  //   );
-  //   const config = getNetworkConfig(chainId);
-  //   Ethers.send("wallet_addEthereumChain", [
-  //     {
-  //       chainId: chainIdHex,
-  //       chainName: config.chainName,
-  //       nativeCurrency: config.nativeCurrency,
-  //       rpcUrls: [config.rpcUrl],
-  //     },
-  //   ]);
-  // }
+  if (res === undefined) {
+    console.log(
+      `Failed to switch chain to ${chainId}. Add the chain to wallet`
+    );
+    const config = getNetworkConfig(chainId);
+    Ethers.send("wallet_addEthereumChain", [
+      {
+        chainId: chainIdHex,
+        chainName: config.chainName,
+        nativeCurrency: config.nativeCurrency,
+        rpcUrls: [config.rpcUrl],
+      },
+    ]);
+  }
 }
 
-// 🟢
+// Contract functions 🟢
 function depositStETH(amount) {
+  State.update({
+    depositButtonLoading: true,
+  });
+
+  return (
+    Ethers.provider()
+      .getSigner()
+      .getAddress()
+      .then((address) => {
+        // const aUSDContract = new ethers.Contract(
+        //   "contract_address",
+        //   "abi_contract",
+        //   Ethers.provider().getSigner()
+        // );
+        // return aUSDContract.depositStETH("param1", "param2", "param3", {
+        //   value: amount,
+        // });
+
+        // testing
+        setTimeout(() => {
+          onActionSuccess({
+            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+          });
+          State.update({ depositButtonLoading: false });
+        }, 2000);
+      })
+      // .then((tx) => {
+      //   tx.wait()
+      //     .then((res) => {
+      //       const { status } = res;
+      //       if (status === 1) {
+      //         onActionSuccess({
+      //           msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+      //         });
+      //         console.log("tx succeeded", res);
+      //       } else {
+      //         console.log("tx failed", res);
+      //         State.update({
+      //           depositButtonLoading: false,
+      //         });
+      //       }
+      //     })
+      //     .catch(() => State.update({ depositButtonLoading: false }));
+      // })
+      .catch(() => State.update({ depositButtonLoading: false }))
+  );
+}
+
+function withdrawStETH(amount) {
   State.update({
     depositButtonLoading: true,
   });
@@ -157,7 +229,11 @@ function depositStETH(amount) {
   //   .catch(() => State.update({ depositButtonLoading: false }));
 }
 
-// 🟢
+function mint(anount) {}
+
+function repay(amount) {}
+
+// helpers
 if (
   state.chainId === undefined &&
   ethers !== undefined &&
@@ -185,23 +261,7 @@ function isValid(a) {
   return true;
 }
 
-// App config 🟢
-function getConfig(network) {
-  const chainId = state.chainId;
-  switch (network) {
-    case "mainnet":
-      return {
-        ownerId: "aave-v3.near",
-        nodeUrl: "https://rpc.mainnet.near.org",
-        ipfsPrefix: "https://ipfs.near.social/ipfs",
-        ...(chainId ? getNetworkConfig(chainId) : {}),
-      };
-    default:
-      throw Error(`Unconfigured environment '${network}'.`);
-  }
-}
-
-const config = getConfig(context.networkId);
+const config = getConfig("testnet");
 
 // 🟡
 const loading = !state.address;
@@ -674,11 +734,162 @@ const changeDepositValue = (value) => {
   State.update({ depositAmount: value });
 };
 
-const PrimaryButton = styled.button`
+const DepositPrimaryButton = styled.button`
   border: 0;
 
   color: white;
-  background: ${state.depositButtonLoading || depositButtonDisabled
+  background: ${depositButtonDisabled ? "#36295C" : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+//withdraw section
+const withdrawMaxValue = Big(state.stEthBalance).toFixed(3);
+
+const withdrawButtonDisabled =
+  !state.withdrawAmount ||
+  !isValid(state.withdrawAmount) ||
+  Number(state.withdrawAmount) === 0;
+
+const changeWithdrawValue = (value) => {
+  if (Number(value) > Number(withdrawMaxValue)) {
+    value = withdrawMaxValue;
+  }
+  if (Number(value) < 0) {
+    value = "0";
+  }
+  if (isValid(value)) {
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    State.update({
+      withdrawAmountInUSD: amountInUSD,
+      withdrawAmount: value,
+    });
+  } else {
+    State.update({
+      withdrawAmountInUSD: "0.00",
+    });
+  }
+  State.update({ withdrawAmount: value });
+};
+
+const WithdrawPrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${state.withdrawButtonLoading || withdrawButtonDisabled
+    ? "#36295C"
+    : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+//mint section
+const mintMaxValue = Big(state.stEthBalance).toFixed(3);
+
+const mintButtonDisabled =
+  !state.mintAmount ||
+  !isValid(state.mintAmount) ||
+  Number(state.mintAmount) === 0;
+
+const changeMintValue = (value) => {
+  if (Number(value) > Number(mintMaxValue)) {
+    value = mintMaxValue;
+  }
+  if (Number(value) < 0) {
+    value = "0";
+  }
+  if (isValid(value)) {
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    State.update({
+      mintAmountInUSD: amountInUSD,
+      mintAmount: value,
+    });
+  } else {
+    State.update({
+      mintAmountInUSD: "0.00",
+    });
+  }
+  State.update({ mintAmount: value });
+};
+
+const MintPrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${state.mintButtonLoading || mintButtonDisabled
+    ? "#36295C"
+    : "#8247e5"};
+  border-radius: 5px;
+
+  height: 48px;
+  width: 100%;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  transition: all 0.3s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+//repay section
+const repayMaxValue = Big(state.stEthBalance).toFixed(3);
+
+const repayButtonDisabled =
+  !state.repayAmount ||
+  !isValid(state.repayAmount) ||
+  Number(state.repayAmount) === 0;
+
+const changeRepayValue = (value) => {
+  if (Number(value) > Number(repayMaxValue)) {
+    value = repayMaxValue;
+  }
+  if (Number(value) < 0) {
+    value = "0";
+  }
+  if (isValid(value)) {
+    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    State.update({
+      repayAmountInUSD: amountInUSD,
+      repayAmount: value,
+    });
+  } else {
+    State.update({
+      repayAmountInUSD: "0.00",
+    });
+  }
+  State.update({ repayAmount: value });
+};
+
+const RepayPrimaryButton = styled.button`
+  border: 0;
+
+  color: white;
+  background: ${state.repayButtonLoading || repayButtonDisabled
     ? "#36295C"
     : "#8247e5"};
   border-radius: 5px;
@@ -974,9 +1185,9 @@ const body = loading ? (
               <br />
               <PrimaryButton
                 onClick={() => depositStETH(state.depositAmount)}
-                disabled={depositButtonLoading || depositButtonDisabled}
+                disabled={depositButtonDisabled}
               >
-                {depositButtonLoading ? <Loading /> : "Deposit"}
+                {state.depositButtonLoading ? <Loading /> : "Deposit"}
               </PrimaryButton>
             </>
           ) : (
@@ -987,30 +1198,183 @@ const body = loading ? (
       {state.selectTab === "withdraw" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
-            <div> Withdraw stETH</div>
+          {state.address ? (
+            <>
+              <GenericTitleTitle>Amount to Withdraw</GenericTitleTitle>
+              <Content>
+                {" "}
+                <>
+                  <FlexBetweenContainer>
+                    <TokenTexture>
+                      <Input
+                        type="number"
+                        value={state.withdrawAmount}
+                        onChange={(e) => {
+                          changeWithdrawValue(e.target.value);
+                        }}
+                        placeholder="0"
+                      />
+                    </TokenTexture>
+
+                    <TokenWrapper>
+                      <img
+                        width={26}
+                        height={26}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                      />
+                      <TokenTexture>{"stETH"}</TokenTexture>
+                    </TokenWrapper>
+                  </FlexBetweenContainer>
+                  <FlexBetweenContainer>
+                    <GrayTexture>${state.withdrawAmountInUSD}</GrayTexture>
+                    <GrayTexture>
+                      Wallet Balance:{" "}
+                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+                        ? Big(state.stEthBalance).toFixed(7)
+                        : state.stEthBalance}
+                      <Max
+                        onClick={() => {
+                          changeWithdrawValue(withdrawMaxValue);
+                        }}
+                      >
+                        MAX
+                      </Max>
+                    </GrayTexture>
+                  </FlexBetweenContainer>
+                </>
+              </Content>
+              <br />
+              <WithdrawPrimaryButtonPrimaryButton
+                onClick={() => withdrawStETH(state.withdrawAmount)}
+                disabled={state.withdrawButtonLoading || withdrawButtonDisabled}
+              >
+                {state.withdrawButtonLoading ? <Loading /> : "Withdraw"}
+              </WithdrawPrimaryButtonPrimaryButton>
+            </>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
       {state.selectTab === "mint" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
-            <div> Deposit stETH</div>
+          {state.address ? (
+            <>
+              <GenericTitleTitle>Amount to Mint</GenericTitleTitle>
+              <Content>
+                {" "}
+                <>
+                  <FlexBetweenContainer>
+                    <TokenTexture>
+                      <Input
+                        type="number"
+                        value={state.mintAmount}
+                        onChange={(e) => {
+                          changeMintValue(e.target.value);
+                        }}
+                        placeholder="0"
+                      />
+                    </TokenTexture>
+
+                    <TokenWrapper>
+                      <img
+                        width={26}
+                        height={26}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                      />
+                      <TokenTexture>{"stETH"}</TokenTexture>
+                    </TokenWrapper>
+                  </FlexBetweenContainer>
+                  <FlexBetweenContainer>
+                    <GrayTexture>${state.mintAmountInUSD}</GrayTexture>
+                    <GrayTexture>
+                      Wallet Balance:{" "}
+                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+                        ? Big(state.stEthBalance).toFixed(7)
+                        : state.stEthBalance}
+                      <Max
+                        onClick={() => {
+                          changeMintValue(mintMaxValue);
+                        }}
+                      >
+                        MAX
+                      </Max>
+                    </GrayTexture>
+                  </FlexBetweenContainer>
+                </>
+              </Content>
+              <br />
+              <MintPrimaryButtonPrimaryButton
+                onClick={() => mintStETH(state.mintAmount)}
+                disabled={state.mintButtonLoading || mintButtonDisabled}
+              >
+                {state.mintButtonLoading ? <Loading /> : "Mint"}
+              </MintPrimaryButtonPrimaryButton>
+            </>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
       {state.selectTab === "repay" && (
         <>
           {/* Add prebuilt component to replace 🟡 */}
-          {state.walletConnected ? (
-            <div> Deposit stETH</div>
+          {state.address ? (
+            <>
+              <GenericTitleTitle>Amount to Repay</GenericTitleTitle>
+              <Content>
+                {" "}
+                <>
+                  <FlexBetweenContainer>
+                    <TokenTexture>
+                      <Input
+                        type="number"
+                        value={state.repayAmount}
+                        onChange={(e) => {
+                          changeRepayValue(e.target.value);
+                        }}
+                        placeholder="0"
+                      />
+                    </TokenTexture>
+
+                    <TokenWrapper>
+                      <img
+                        width={26}
+                        height={26}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/stETH.svg`}
+                      />
+                      <TokenTexture>{"stETH"}</TokenTexture>
+                    </TokenWrapper>
+                  </FlexBetweenContainer>
+                  <FlexBetweenContainer>
+                    <GrayTexture>${state.repayAmountInUSD}</GrayTexture>
+                    <GrayTexture>
+                      Wallet Balance:{" "}
+                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
+                        ? Big(state.stEthBalance).toFixed(7)
+                        : state.stEthBalance}
+                      <Max
+                        onClick={() => {
+                          changeRepayValue(repayMaxValue);
+                        }}
+                      >
+                        MAX
+                      </Max>
+                    </GrayTexture>
+                  </FlexBetweenContainer>
+                </>
+              </Content>
+              <br />
+              <RepayPrimaryButtonPrimaryButton
+                onClick={() => repayStETH(state.repayAmount)}
+                disabled={state.repayButtonLoading || repayButtonDisabled}
+              >
+                {state.SrepayButtonLoading ? <Loading /> : "Repay"}
+              </RepayPrimaryButtonPrimaryButton>
+            </>
           ) : (
-            "Need to connect wallet first."
+            <div>Need to connect wallet first.</div>
           )}
         </>
       )}
