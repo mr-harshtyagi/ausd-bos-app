@@ -15,6 +15,29 @@ const NATIVE_SYMBOL_ADDRESS_MAP_KEY = "0x0";
 const ETH_TOKEN = { name: "Ethereum", symbol: "ETH", decimals: 18 };
 const WETH_TOKEN = { name: "Wrapped Ether", symbol: "WETH", decimals: 18 };
 
+// App states
+State.init({
+  imports: {}, // 🔴
+  chainId: undefined, // chainId is undefined in the case of unsupported chains
+  isChainSupported: true,
+  showDropdown: false,
+  walletConnected: false,
+  stEthBalance: "2", //deposit
+  stEthPriceInUsd: "1700",
+  depositAmount: "",
+  depositAmountInUSD: "0.00",
+  depositButtonLoading: false,
+  depositedStEth: undefined, // withdraw
+  mintableaUSD: undefined, //mint
+  mintedaUSD: undefined, // repay
+  address: undefined,
+  selectTab: "deposit", // deposit | withdraw | mint | repay
+  totalDeposits: "1700",
+  stablecoinApy: "8.33",
+  healthFactor: "1.5",
+  alertModalText: false,
+});
+
 // Get aUSD network config by chain id 🟢
 function getNetworkConfig(chainId) {
   const abis = {
@@ -77,46 +100,61 @@ function depositStETH(amount) {
   State.update({
     depositButtonLoading: true,
   });
-  return Ethers.provider()
-    .getSigner()
-    .getAddress()
-    .then((address) => {
-      const aUSDContract = new ethers.Contract(
-        "contract_address",
-        "abi_contract",
-        Ethers.provider().getSigner()
-      );
-      return aUSDContract.depositStETH("param1", "param2", "param3", {
-        value: amount,
-      });
-    })
-    .then((tx) => {
-      tx.wait()
-        .then((res) => {
-          const { status } = res;
-          if (status === 1) {
-            onActionSuccess({
-              msg: `You supplied ${Big(amount)
-                .div(Big(10).pow(decimals))
-                .toFixed(8)} ${"stETH"}`,
-              callback: () => {
-                onRequestClose();
-                State.update({
-                  depositButtonLoading: false,
-                });
-              },
-            });
-            console.log("tx succeeded", res);
-          } else {
-            console.log("tx failed", res);
-            State.update({
-              depositButtonLoading: false,
-            });
-          }
-        })
-        .catch(() => State.update({ depositButtonLoading: false }));
-    })
-    .catch(() => State.update({ depositButtonLoading: false }));
+  // testing
+  onActionSuccess({
+    msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+    // callback: () => {
+    //   onRequestClose();
+    //   State.update({
+    //     depositButtonLoading: false,
+    //   });
+    // },
+  });
+  ///
+  console.log("tx succeeded", res);
+  State.update({
+    depositButtonLoading: false,
+  });
+  // return Ethers.provider()
+  //   .getSigner()
+  //   .getAddress()
+  //   .then((address) => {
+  //     const aUSDContract = new ethers.Contract(
+  //       "contract_address",
+  //       "abi_contract",
+  //       Ethers.provider().getSigner()
+  //     );
+  //     return aUSDContract.depositStETH("param1", "param2", "param3", {
+  //       value: amount,
+  //     });
+  //   })
+  //   .then((tx) => {
+  //     tx.wait()
+  //       .then((res) => {
+  //         const { status } = res;
+  //         if (status === 1) {
+  //           onActionSuccess({
+  //             msg: `You supplied ${Big(amount)
+  //               .div(Big(10).pow(decimals))
+  //               .toFixed(8)} ${"stETH"}`,
+  //             callback: () => {
+  //               onRequestClose();
+  //               State.update({
+  //                 depositButtonLoading: false,
+  //               });
+  //             },
+  //           });
+  //           console.log("tx succeeded", res);
+  //         } else {
+  //           console.log("tx failed", res);
+  //           State.update({
+  //             depositButtonLoading: false,
+  //           });
+  //         }
+  //       })
+  //       .catch(() => State.update({ depositButtonLoading: false }));
+  //   })
+  //   .catch(() => State.update({ depositButtonLoading: false }));
 }
 
 // 🟢
@@ -164,29 +202,6 @@ function getConfig(network) {
 }
 
 const config = getConfig(context.networkId);
-
-// App states
-State.init({
-  imports: {}, // 🔴
-  chainId: undefined, // chainId is undefined in the case of unsupported chains
-  isChainSupported: true,
-  showDropdown: false,
-  walletConnected: false,
-  stEthBalance: "2", //deposit
-  stEthPriceInUsd: "1700",
-  depositAmount: "",
-  depositAmountInUSD: "0.00",
-  depositButtonLoading: false,
-  depositedStEth: undefined, // withdraw
-  mintableaUSD: undefined, //mint
-  mintedaUSD: undefined, // repay
-  address: undefined,
-  selectTab: "deposit", // deposit | withdraw | mint | repay
-  totalDeposits: "1700",
-  stablecoinApy: "8.33",
-  healthFactor: "1.5",
-  alertModalText: false,
-});
 
 // 🟡
 const loading = !state.address;
@@ -271,17 +286,9 @@ function updateDataAndAddress() {
 }
 
 function onActionSuccess({ msg, callback }) {
-  // update data if action finishes
-  updateData(true);
   // update UI after data has almost loaded
-  setTimeout(() => {
-    if (callback) {
-      callback();
-    }
-    if (msg) {
-      State.update({ alertModalText: msg });
-    }
-  }, 5000);
+
+  State.update({ alertModalText: msg });
 }
 
 const getChainImage = (chainId) => {};
@@ -639,7 +646,7 @@ const Right = () => (
 );
 
 // deposit section
-const deposiMaxValue = Big(state.stEthBalance).toFixed(3);
+const depositMaxValue = Big(state.stEthBalance).toFixed(3);
 
 const depositButtonDisabled =
   !state.depositAmount ||
@@ -647,8 +654,8 @@ const depositButtonDisabled =
   Number(state.depositAmount) === 0;
 
 const changeDepositValue = (value) => {
-  if (Number(value) > Number(deposiMaxValue)) {
-    value = deposiMaxValue;
+  if (Number(value) > Number(depositMaxValue)) {
+    value = depositMaxValue;
   }
   if (Number(value) < 0) {
     value = "0";
@@ -955,7 +962,7 @@ const body = loading ? (
                         : state.stEthBalance}
                       <Max
                         onClick={() => {
-                          changeDepositValue(maxValue);
+                          changeDepositValue(depositMaxValue);
                         }}
                       >
                         MAX
@@ -966,7 +973,7 @@ const body = loading ? (
               </Content>
               <br />
               <PrimaryButton
-                onClick={depositStETH}
+                onClick={() => depositStETH(state.depositAmount)}
                 disabled={depositButtonLoading || depositButtonDisabled}
               >
                 {depositButtonLoading ? <Loading /> : "Deposit"}
