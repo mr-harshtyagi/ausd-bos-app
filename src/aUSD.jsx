@@ -4,11 +4,11 @@
 const ROUND_DOWN = 0;
 const CONTRACT_ABI = {
   aUSD_ABI:
-    "https://raw.githubusercontent.com/corndao/aave-v3-bos-app/main/abi/WrappedTokenGatewayV3ABI.json",
+    "https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/abi/ausd.json",
   erc20_stETH_ABI:
-    "https://raw.githubusercontent.com/corndao/aave-v3-bos-app/main/abi/ERC20Permit.json",
+    "https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/abi/erc20stETH.json",
   aUSD_Oracle_ABI:
-    "https://raw.githubusercontent.com/corndao/aave-v3-bos-app/main/abi/AAVEPoolV3.json",
+    "https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/abi/oracle.json",
 };
 const CONTRACT_ADDRESS = fetch(
   "https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/contract_addresses.json"
@@ -20,7 +20,6 @@ const WETH_TOKEN = { name: "Wrapped Ether", symbol: "WETH", decimals: 18 };
 
 // App states
 State.init({
-  imports: {}, // 🔴
   chainId: undefined, // chainId is undefined in the case of unsupported chains
   isChainSupported: true,
   showDropdown: false,
@@ -346,22 +345,6 @@ const config = getConfig("testnet");
 // 🟡
 const loading = !state.address;
 
-// Import functions to state.imports
-function importFunctions(imports) {
-  if (loading) {
-    State.update({
-      imports,
-    });
-  }
-}
-
-// Define the modules you'd like to import
-const modules = {
-  number: `${config.ownerId}/widget/Utils.Number`,
-  date: `${config.ownerId}/widget/Utils.Date`,
-  data: `${config.ownerId}/widget/AAVE.Data`,
-};
-
 function checkProviderAndUpdateStates() {
   const provider = Ethers.provider();
   if (provider) {
@@ -387,16 +370,6 @@ function formatHealthFactor(healthFactor) {
   if (Number(healthFactor) === -1) return "∞";
   return Big(healthFactor).toFixed(2, ROUND_DOWN);
 }
-
-// function batchBalanceOf(chainId, userAddress, tokenAddresses, abi) {
-//   const balanceProvider = new ethers.Contract(
-//     config.balanceProviderAddress,
-//     abi.body,
-//     Ethers.provider().getSigner()
-//   );
-
-//   return balanceProvider.batchBalanceOf([userAddress], tokenAddresses);
-// }
 
 // update data in async manner
 function updateDataAndAddress() {
@@ -706,8 +679,8 @@ const heroData = [
   },
 
   {
-    name: "Health Factor",
-    value: `${state.healthFactor}`,
+    name: "aUSD Minted",
+    value: `$ ${200}`,
   },
 ].filter((element) => !!element);
 
@@ -1174,12 +1147,12 @@ const body = loading ? (
               <div
                 className={[
                   "value",
-                  row.name === "Health Factor" ? "text-green" : undefined,
+                  row.name === "aUSD Minted" ? "text-green" : undefined,
                 ]
                   .filter((value) => !!value)
                   .join(" ")}
               >
-                {row.value}
+                {!state.address ? "-" : row.value}
               </div>
             </KVData>
           ))}
@@ -1364,7 +1337,7 @@ const body = loading ? (
                         height={26}
                         src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/src/Images/aUSD.svg`}
                       />
-                      <TokenTexture>{"stETH"}</TokenTexture>
+                      <TokenTexture>{"aUSD"}</TokenTexture>
                     </TokenWrapper>
                   </FlexBetweenContainer>
                   <FlexBetweenContainer>
@@ -1425,7 +1398,7 @@ const body = loading ? (
                         height={26}
                         src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/src/Images/aUSD.svg`}
                       />
-                      <TokenTexture>{"stETH"}</TokenTexture>
+                      <TokenTexture>{"aUSD"}</TokenTexture>
                     </TokenWrapper>
                   </FlexBetweenContainer>
                   <FlexBetweenContainer>
@@ -1477,11 +1450,6 @@ const body = loading ? (
 
 return (
   <div>
-    {/* Component Head */}
-    <Widget
-      src={`${config.ownerId}/widget/Utils.Import`}
-      props={{ modules, onLoad: importFunctions }}
-    />
     {/* Component Body */}
     {body}
   </div>
