@@ -30,18 +30,16 @@ State.init({
   depositAmount: "",
   depositAmountInUSD: "0.00",
   depositButtonLoading: false,
-  depositedStEth: undefined, // withdraw
-  depositedStEthInUSD: undefined,
+  depositedStEth: "10", // withdraw
   withdrawAmount: "",
   withdrawAmountInUSD: "0.00",
   withdrawButtonLoading: false,
-  mintableaUSD: undefined, //mint
-  mintableaUSDInUSD: undefined,
+  mintableaUSD: "2000", //mint
+  aUSDPriceInUsd: "1.00",
   mintAmount: "",
   mintAmountInUSD: "0.00",
   mintButtonLoading: false,
-  mintedaUSD: undefined, // repay
-  mintedaUSDInUSD: undefined,
+  mintedaUSD: "200", // repay
   repayAmount: "",
   repayAmountInUSD: "0.00",
   repayButtonLoading: false,
@@ -190,7 +188,7 @@ function withdrawStETH(amount) {
         // testing
         setTimeout(() => {
           onActionSuccess({
-            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+            msg: `You withdrew ${Big(amount).toFixed(8)} ${"stETH"}`,
           });
           State.update({ withdrawButtonLoading: false });
         }, 2000);
@@ -239,7 +237,7 @@ function mint(amount) {
         // testing
         setTimeout(() => {
           onActionSuccess({
-            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+            msg: `You minted ${Big(amount).toFixed(8)} ${"aUSD"}`,
           });
           State.update({ mintButtonLoading: false });
         }, 2000);
@@ -288,7 +286,7 @@ function repay(amount) {
         // testing
         setTimeout(() => {
           onActionSuccess({
-            msg: `You supplied ${Big(amount).toFixed(8)} ${"stETH"}`,
+            msg: `You repayed ${Big(amount).toFixed(8)} ${"aUSD"}`,
           });
           State.update({ repayButtonLoading: false });
         }, 2000);
@@ -837,7 +835,7 @@ const DepositPrimaryButton = styled.button`
 `;
 
 //withdraw section
-const withdrawMaxValue = Big(state.stEthBalance).toFixed(3);
+const withdrawMaxValue = Big(state.depositedStEth).toFixed(3);
 
 const withdrawButtonDisabled =
   !state.withdrawAmount ||
@@ -888,7 +886,7 @@ const WithdrawPrimaryButton = styled.button`
 `;
 
 //mint section
-const mintMaxValue = Big(state.stEthBalance).toFixed(3);
+const mintMaxValue = Big(state.mintableaUSD).toFixed(3);
 
 const mintButtonDisabled =
   !state.mintAmount ||
@@ -903,7 +901,7 @@ const changeMintValue = (value) => {
     value = "0";
   }
   if (isValid(value)) {
-    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    const amountInUSD = Big(value).mul(state.aUSDPriceInUsd).toFixed(2);
     State.update({
       mintAmountInUSD: amountInUSD,
       mintAmount: value,
@@ -939,7 +937,7 @@ const MintPrimaryButton = styled.button`
 `;
 
 //repay section
-const repayMaxValue = Big(state.stEthBalance).toFixed(3);
+const repayMaxValue = Big(state.mintedaUSD).toFixed(3);
 
 const repayButtonDisabled =
   !state.repayAmount ||
@@ -954,7 +952,7 @@ const changeRepayValue = (value) => {
     value = "0";
   }
   if (isValid(value)) {
-    const amountInUSD = Big(value).mul(state.stEthPriceInUsd).toFixed(2);
+    const amountInUSD = Big(value).mul(state.aUSDPriceInUsd).toFixed(2);
     State.update({
       repayAmountInUSD: amountInUSD,
       repayAmount: value,
@@ -1147,7 +1145,7 @@ const body = loading ? (
             </DropdownMobile>
           )}
           <DropdownContainer onClick={toggleDropdown}>
-            <ChainImage />
+            <SepoliEthImage />
             <SwitchTitle>{config.chainName}</SwitchTitle>
             {!disabled && <DropdownImage />}
           </DropdownContainer>
@@ -1310,10 +1308,11 @@ const body = loading ? (
                   <FlexBetweenContainer>
                     <GrayTexture>${state.withdrawAmountInUSD}</GrayTexture>
                     <GrayTexture>
-                      Wallet Balance:{" "}
-                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
-                        ? Big(state.stEthBalance).toFixed(7)
-                        : state.stEthBalance}
+                      Withdrawable Balance:{" "}
+                      {isValid(state.depositedStEth) &&
+                      state.depositStETH !== "-"
+                        ? Big(state.depositedStEth).toFixed(7)
+                        : state.depositedStEth}
                       <Max
                         onClick={() => {
                           changeWithdrawValue(withdrawMaxValue);
@@ -1363,7 +1362,7 @@ const body = loading ? (
                       <img
                         width={26}
                         height={26}
-                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/aUSD.svg`}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/src/Images/aUSD.svg`}
                       />
                       <TokenTexture>{"stETH"}</TokenTexture>
                     </TokenWrapper>
@@ -1371,10 +1370,10 @@ const body = loading ? (
                   <FlexBetweenContainer>
                     <GrayTexture>${state.mintAmountInUSD}</GrayTexture>
                     <GrayTexture>
-                      Wallet Balance:{" "}
-                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
-                        ? Big(state.stEthBalance).toFixed(7)
-                        : state.stEthBalance}
+                      Max Limit:{" "}
+                      {isValid(state.mintableaUSD) && state.mintableaUSD !== "-"
+                        ? Big(state.mintableaUSD).toFixed(7)
+                        : state.mintableaUSD}
                       <Max
                         onClick={() => {
                           changeMintValue(mintMaxValue);
@@ -1424,7 +1423,7 @@ const body = loading ? (
                       <img
                         width={26}
                         height={26}
-                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/3dde1f2a96c5b66a08009e58c3f18ee229a83300/src/Images/aUSD.svg`}
+                        src={`https://raw.githubusercontent.com/mr-harshtyagi/ausd-bos-app/main/src/Images/aUSD.svg`}
                       />
                       <TokenTexture>{"stETH"}</TokenTexture>
                     </TokenWrapper>
@@ -1432,10 +1431,10 @@ const body = loading ? (
                   <FlexBetweenContainer>
                     <GrayTexture>${state.repayAmountInUSD}</GrayTexture>
                     <GrayTexture>
-                      Wallet Balance:{" "}
-                      {isValid(state.stEthBalance) && state.stEthBalance !== "-"
-                        ? Big(state.stEthBalance).toFixed(7)
-                        : state.stEthBalance}
+                      Total Borrowed :{" "}
+                      {isValid(state.mintedaUSD) && state.mintedaUSD !== "-"
+                        ? Big(state.mintedaUSD).toFixed(7)
+                        : state.mintedaUSD}
                       <Max
                         onClick={() => {
                           changeRepayValue(repayMaxValue);
